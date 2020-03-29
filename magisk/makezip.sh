@@ -1,0 +1,28 @@
+#! /bin/sh
+
+zipname="uperf-magisk.zip"
+
+echo "Compile Uperf binary..."
+cd ..
+make clean 1> /dev/null
+make release -j8 1> /dev/null
+
+echo "Compile Uperf configs..."
+cd config
+python3 make_configs.py
+cd ..
+
+echo "Copy files from project..."
+cp uperf magisk/bin/
+cp -r build/configs/ magisk/config
+
+echo "Make flashable magisk package..."
+cd magisk
+rm "$zipname"
+zip "$zipname" -q -9 -r . -x makezip.sh
+
+echo "Cleanup..."
+rm bin/uperf
+rm -r config
+
+echo "Make zip done."

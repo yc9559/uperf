@@ -50,3 +50,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# python
+*.pyc
+
+/.vscode
+/build
+/uperf
+/magisk/uperf-magisk.zip
