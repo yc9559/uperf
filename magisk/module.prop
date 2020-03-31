@@ -1,6 +1,6 @@
 id=uperf
 name=Uperf
-version=v1 preview(20200329)
+version=DEV 20200331
 versionCode=1
 author=Matt Yang
 description=Userspace performance controller for android. Repo: https://github.com/yc9559/uperf/

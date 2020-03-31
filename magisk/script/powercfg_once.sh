@@ -58,11 +58,13 @@ change_task_cgroup "surfaceflinger" "foreground" "stune"
 # reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
 change_task_cgroup ".hardware." "background" "cpuset"
 change_task_affinity ".hardware." "0f"
-# ...but exclude the fingerprint&camera service for speed
+# ...but exclude fingerprint&camera&display service for speed
 change_task_cgroup ".hardware.biometrics.fingerprint" "" "cpuset"
 change_task_cgroup ".hardware.camera.provider" "" "cpuset"
+change_task_cgroup ".hardware.display" "" "cpuset"
 change_task_affinity ".hardware.biometrics.fingerprint" "ff"
 change_task_affinity ".hardware.camera.provider" "ff"
+change_task_affinity ".hardware.display" "ff"
 
 # provide best performance for fingerprint service
 change_task_cgroup ".hardware.biometrics.fingerprint" "rt" "stune"
@@ -85,14 +87,20 @@ lock_val "0" /sys/class/input_booster/level
 lock_val "0" /sys/class/input_booster/head
 lock_val "0" /sys/class/input_booster/tail
 # Samsung EPIC interfaces
-lock_val "0" /dev/cluster0_freq_min
-lock_val "0" /dev/cluster1_freq_min
-lock_val "0" /dev/cluster2_freq_min
+# lock_val "0" /dev/cluster0_freq_min
+# lock_val "0" /dev/cluster1_freq_min
+# lock_val "0" /dev/cluster2_freq_min
 # lock_val "0" /dev/bus_throughput
 # lock_val "0" /dev/gpu_freq_min
 # Samsung /kernel/sched/ems/...
-lock_val "0" /sys/kernel/ems/eff_mode
+# lock_val "0" /sys/kernel/ems/eff_mode
 # 3rd
+lock_val "0" /sys/kernel/cpu_input_boost/enabled
+lock_val "0" /sys/kernel/cpu_input_boost/ib_freqs
+lock_val "0" /sys/kernel/cpu_input_boost/ib_duration_m
+lock_val "0" /sys/kernel/cpu_input_boost/ib_duration_ms
+lock_val "0" /sys/module/cpu_boost/parameters/input_boost_enabled
+lock_val "0" /sys/module/cpu_boost/parameters/dynamic_stune_boost
 lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms
 lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms_s2
 lock_val "0" /sys/module/dsboost/parameters/input_boost_duration
@@ -119,6 +127,8 @@ lock_val "0" /sys/module/devfreq_boost/parameters/input_boost_duration
 
 # stop qualcomm perfd
 perfhal_stop
+# brain service maybe not smart
+stop oneplus_brain_service
 # disable service below will BOOM
 # stop vendor.power.stats-hal-1-0
 # stop vendor.power-hal-1-0
@@ -133,23 +143,28 @@ lock_val "0" $CPU/cpuhotplug/enabled
 for i in 0 1 2 3 4 5 6 7 8 9; do
     lock_val "1" $CPU/cpu$i/online
 done
+
 # no msm_performance limit
 set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
 set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
-# more conservative governor
-set_governor_param "schedutil/hispeed_load" "0:90 4:90 6:90 7:90"
-set_governor_param "schedutil/hispeed_freq" "0:1200000 4:1200000 6:1200000 7:1200000"
-# unify walt hmp interactive governor
-set_governor_param "interactive/use_sched_load" "0:1 4:1 6:1 7:1"
-set_governor_param "interactive/use_migration_notif" "0:1 4:1 6:1 7:1"
-set_governor_param "interactive/enable_prediction" "0:0 4:0 6:0 7:0"
-set_governor_param "interactive/ignore_hispeed_on_notif" "0:0 4:0 6:0 7:0"
-set_governor_param "interactive/fast_ramp_down" "0:0 4:0 6:0 7:0"
 # conservative sched core_ctl
 set_corectl_param "enable" "0:1 2:1 4:1 6:1 7:1"
 set_corectl_param "busy_down_thres" "0:10 2:10 4:10 6:10 7:10"
 set_corectl_param "busy_up_thres" "0:20 2:20 4:20 6:20 7:20"
 set_corectl_param "offline_delay_ms" "0:100 2:100 4:100 6:100 7:100"
+
+# unify governor
+if [ "$(is_eas)" == "true" ]; then
+    set_governor_param "scaling_governor" "0:conservative 2:conservative 4:conservative 6:conservative 7:conservative"
+else
+    set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
+fi
+# unify walt hmp interactive governor
+set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1 6:1 7:1"
+set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1 6:1 7:1"
+set_governor_param "interactive/enable_prediction" "0:0 2:0 4:0 6:0 7:0"
+set_governor_param "interactive/ignore_hispeed_on_notif" "0:0 2:0 4:0 6:0 7:0"
+set_governor_param "interactive/fast_ramp_down" "0:0 2:0 4:0 6:0 7:0"
 
 # disable sched global placement boost
 lock_val "0" $SCHED/sched_boost
@@ -161,8 +176,8 @@ lock_val "0" $SCHED/sched_boost_top_app
 # unify WALT HMP sched
 lock_val "5" $SCHED/sched_ravg_hist_size
 lock_val "2" $SCHED/sched_window_stats_policy
-# do not place light processes on big cluster
-set_sched_migrate "95 80" "80 60" "140" "120"
+# place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
+set_sched_migrate "60 90" "30 30" "120" "100"
 # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
 lock_val "30000000" $SCHED/sched_migration_cost_ns
 # OnePlus opchain pins UX threads on the big cluster

@@ -68,11 +68,17 @@ _get_sm6150_type()
 
 _get_sdm865_type()
 {
-    local ddr_device_type
-    ddr_device_type="$(od -An -tx /proc/device-tree/memory/ddr_device_type)"
-    ddr_device_type="${ddr_device_type:4:2}"
-    [ "$ddr_device_type" == "07" ] && echo "sdm865_lp4x"
-    [ "$ddr_device_type" == "08" ] && echo "sdm865_lp5"
+    local ddr_type4="07"
+	local ddr_type5="08"
+    local ddr_type
+    ddr_type="$(od -An -tx /proc/device-tree/memory/ddr_device_type)"
+    if [ ${ddr_type:4:2} == $ddr_type5 ]; then
+        echo "sdm865_lp5"
+    elif [ ${ddr_type:4:2} == $ddr_type4 ]; then
+        echo "sdm865_lp4x"
+    else
+        echo "sdm865_lp5"
+    fi
 }
 
 _get_sdm660_type()
@@ -143,7 +149,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v1 preview(20200329)"
+    echo "* Version: DEV 20200331"
     echo ""
 }
 

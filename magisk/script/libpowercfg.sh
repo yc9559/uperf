@@ -2,7 +2,7 @@
 # Powercfg Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200329
+# Version: 20200330
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -44,6 +44,15 @@ fi
 get_package_name_by_keyword()
 {
     echo "$(pm list package | grep "$1" | head -n "$2" | cut -d: -f2)"
+}
+
+is_eas()
+{
+    if [ "$(grep sched $CPU/cpu0/cpufreq/scaling_available_governors)" != "" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
 }
 
 # $1:"0:576000 4:710400 7:825600"

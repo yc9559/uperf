@@ -30,7 +30,7 @@ save_panel()
     write_panel ""
     write_panel "Uperf https://github.com/yc9559/uperf/"
     write_panel "Author: Matt Yang"
-    write_panel "Version: v1 preview(20200329)"
+    write_panel "Version: DEV 20200331"
     write_panel "Last performed: $(date '+%Y-%m-%d %H:%M:%S')"
     write_panel ""
     write_panel "[Uperf status]"
