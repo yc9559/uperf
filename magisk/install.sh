@@ -110,6 +110,9 @@ on_install()
     # use universal setup.sh
     sh $MODPATH/setup_uperf.sh
     [ "$?" != "0" ] && abort
+    # pretend to be system binary
+    mkdir -p $MODPATH/system/bin
+    cp $MODPATH/bin/uperf $MODPATH/system/bin
     # use once
     rm $MODPATH/setup_uperf.sh
 }

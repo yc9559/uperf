@@ -55,6 +55,10 @@ change_task_cgroup "android.phone" "foreground" "stune"
 change_task_cgroup "surfaceflinger" "top-app" "cpuset"
 change_task_cgroup "surfaceflinger" "foreground" "stune"
 
+# fix system_server in /dev/stune/top-app/cgroup.procs
+change_proc_cgroup "system_server" "top-app" "cpuset"
+change_proc_cgroup "system_server" "foreground" "stune"
+
 # reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
 change_task_cgroup ".hardware." "background" "cpuset"
 change_task_affinity ".hardware." "0f"
@@ -139,6 +143,9 @@ stop oneplus_brain_service
 # Exynos hotplug
 lock_val "0" /sys/power/cpuhotplug/enabled
 lock_val "0" $CPU/cpuhotplug/enabled
+# turn off msm_thermal
+lock_val "0" /sys/module/msm_thermal/core_control/enabled
+lock_val "N" /sys/module/msm_thermal/parameters/enabled
 # bring all cores online
 for i in 0 1 2 3 4 5 6 7 8 9; do
     lock_val "1" $CPU/cpu$i/online
@@ -155,16 +162,24 @@ set_corectl_param "offline_delay_ms" "0:100 2:100 4:100 6:100 7:100"
 
 # unify governor
 if [ "$(is_eas)" == "true" ]; then
-    set_governor_param "scaling_governor" "0:conservative 2:conservative 4:conservative 6:conservative 7:conservative"
+    set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
 else
     set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
 fi
-# unify walt hmp interactive governor
-set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1 6:1 7:1"
-set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1 6:1 7:1"
-set_governor_param "interactive/enable_prediction" "0:0 2:0 4:0 6:0 7:0"
-set_governor_param "interactive/ignore_hispeed_on_notif" "0:0 2:0 4:0 6:0 7:0"
-set_governor_param "interactive/fast_ramp_down" "0:0 2:0 4:0 6:0 7:0"
+# more conservative governor
+set_governor_param "schedutil/hispeed_load" "0:90 2:90 4:90 6:90 7:90"
+set_governor_param "schedutil/hispeed_freq" "0:1200000 2:1200000 4:1200000 6:1200000 7:1200000"
+set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
+set_governor_param "schedutil/pl" "0:0"
+# unify hmp interactive governor, only 2+2 4+2 4+4
+set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
+set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1"
+set_governor_param "interactive/enable_prediction" "0:0 2:0 4:0"
+set_governor_param "interactive/ignore_hispeed_on_notif" "0:0 2:0 4:0"
+set_governor_param "interactive/fast_ramp_down" "0:0 2:0 4:0"
+set_governor_param "interactive/boostpulse_duration" "0:0 2:0 4:0"
+set_governor_param "interactive/boost" "0:0 2:0 4:0"
+set_governor_param "interactive/timer_slack" "0:12345678 2:12345678 4:12345678"
 
 # disable sched global placement boost
 lock_val "0" $SCHED/sched_boost
@@ -176,15 +191,20 @@ lock_val "0" $SCHED/sched_boost_top_app
 # unify WALT HMP sched
 lock_val "5" $SCHED/sched_ravg_hist_size
 lock_val "2" $SCHED/sched_window_stats_policy
+lock_val "90" $SCHED/sched_spill_load
+lock_val "1" $SCHED/sched_restrict_cluster_spill
+lock_val "1" $SCHED/sched_prefer_sync_wakee_to_waker
+lock_val "200000" $SCHED/sched_freq_inc_notify
+lock_val "400000" $SCHED/sched_freq_dec_notify
 # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
-set_sched_migrate "60 90" "30 30" "120" "100"
+set_sched_migrate "90 90" "45 45" "120" "100"
 # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
 lock_val "30000000" $SCHED/sched_migration_cost_ns
 # OnePlus opchain pins UX threads on the big cluster
 lock_val "0" /sys/module/opchain/parameters/chain_on
 
-# traditional C-state controller
-lock_val "0" $LPM/lpm_prediction
+# C-state controller
+lock_val "1" $LPM/lpm_prediction
 lock_val "0" $LPM/sleep_disabled
 
 # start uperf once only

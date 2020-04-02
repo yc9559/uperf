@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200329
+# Version: 20200401
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -45,12 +45,17 @@ _is_eas()
 }
 
 # $1:cpuid
-_get_maxfreq()
+get_maxfreq()
 {
-    local avail_freqs
-    local maxfreq
-    avail_freqs="$(cat /sys/devices/system/cpu/cpu$1/cpufreq/scaling_available_frequencies)"
-    for f in avail_freqs; do
+    local fpath="/sys/devices/system/cpu/cpu$1/cpufreq/scaling_available_frequencies"
+    local maxfreq="0"
+
+    if [ ! -f "$fpath" ]; then
+        echo ""
+        return
+    fi
+
+    for f in $(cat $fpath); do
         [ "$f" -gt "$maxfreq" ] && maxfreq="$f"
     done
     echo "$maxfreq"
@@ -81,13 +86,30 @@ _get_sdm865_type()
     fi
 }
 
-_get_sdm660_type()
+_get_sdm636_type()
 {
     if [ "$(_is_eas)" == "true" ]; then
-        echo "sdm660_eas"
+        echo "sdm636_eas"
     else
-        echo "sdm660_hmp"
+        echo "sdm636_hmp"
     fi
+}
+
+_get_sdm660_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 4)"
+    # sdm660 & sdm636 may share the same platform name
+    if [ "$b_max" -gt 2000000 ]; then
+        if [ "$(_is_eas)" == "true" ]; then
+            echo "sdm660_eas"
+        else
+            echo "sdm660_hmp"
+        fi
+    else
+        echo "$(_get_sdm636_type)"
+    fi
+
 }
 
 _get_sdm835_type()
@@ -149,7 +171,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200331"
+    echo "* Version: DEV 20200402"
     echo ""
 }
 
@@ -168,14 +190,15 @@ uperf_install()
     "lito")         cfgname="sdm765" ;;
     "sm6150")       cfgname="$(_get_sm6150_type)" ;;
     "sdm710")       cfgname="sdm710" ;;
-    "msm8953")      cfgname="sdm625";;
-    "msm8953pro")   cfgname="sdm626";;
-    "sdm660")       cfgname="$(_get_sdm660_type)";;
-    "sdm636")       cfgname="sdm636";;
-    "msm8976")      cfgname="sdm652";;
-    "msm8956")      cfgname="sdm650";;
-    "msm8998")      cfgname="$(_get_sdm835_type)";;
-    "msm8996"|"msm8996pro") cfgname="$(_get_sdm82x_type)";;
+    "msm8953")      cfgname="sdm625" ;;
+    "msm8953pro")   cfgname="sdm626" ;;
+    "sdm660")       cfgname="$(_get_sdm660_type)" ;;
+    "sdm636")       cfgname="$(_get_sdm636_type)" ;;
+    "trinket")      cfgname="sdm665" ;;
+    "msm8976")      cfgname="sdm652" ;;
+    "msm8956")      cfgname="sdm650" ;;
+    "msm8998")      cfgname="$(_get_sdm835_type)" ;;
+    "msm8996"|"msm8996pro") cfgname="$(_get_sdm82x_type)" ;;
     "universal9820"|"universal9825") cfgname="e9820" ;;
     "universal9810") cfgname="e9810" ;;
     "universal8895") cfgname="e8895" ;;
@@ -187,8 +210,8 @@ uperf_install()
     if [ "$cfgname" != "unsupported" ]; then
         echo "- The platform name is $target. Use $cfgname.json"
         _setup_platform_file "$cfgname"
-        _set_perm_recursive $BASEDIR 0 0 0755 0644
-        _set_perm_recursive $BASEDIR/bin 0 0 0755 0755
+        _set_perm_recursive $BASEDIR 0 0 0755 0644 u:object_r:rootfs:s0
+        _set_perm_recursive $BASEDIR/bin 0 0 0755 0755 u:object_r:rootfs:s0
         # in case of set_perm_recursive is broken
         chmod 0755 $BASEDIR/bin/*
     else

@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200331
+# Version: 20200401
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -69,11 +69,6 @@ clear_panel()
 
 wait_until_login()
 {
-    # whether in lock screen, tested on Android 7.1 & 10.0
-    # in case of other magisk module remounting /data as RW
-    while [ "$(dumpsys window policy | grep mInputRestricted=true)" != "" ]; do
-        sleep 2
-    done
     # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
     while [ ! -d "/sdcard/Android" ]; do
         sleep 2
@@ -125,7 +120,7 @@ change_task_affinity()
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            taskset -p "$2" "$temp_tid"
+            taskset -p "$2" "$temp_tid" > /dev/null
         done
     done
 }

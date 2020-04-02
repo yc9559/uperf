@@ -55,6 +55,23 @@ is_eas()
     fi
 }
 
+# $1:cpuid
+get_maxfreq()
+{
+    local fpath="/sys/devices/system/cpu/cpu$1/cpufreq/scaling_available_frequencies"
+    local maxfreq="0"
+
+    if [ ! -f "$fpath" ]; then
+        echo ""
+        return
+    fi
+
+    for f in $(cat $fpath); do
+        [ "$f" -gt "$maxfreq" ] && maxfreq="$f"
+    done
+    echo "$maxfreq"
+}
+
 # $1:"0:576000 4:710400 7:825600"
 set_cpufreq_min()
 {
@@ -111,6 +128,32 @@ set_corectl_param()
         mutate "$val" $CPU/cpu$key/core_ctl/$1
     done
 }
+
+# array not working in sh shell
+# $1:func $2:percluster_vals
+# set_percluster()
+# {
+#     local cpuids
+#     local prev_maxf="0"
+#     local now_maxf="0"
+#     for i in $(seq 0 9); do
+#         now_maxf="$(get_maxfreq $i)"
+#         if [ "$now_maxf" != "" ] && [ "$now_maxf" != "$prev_maxf" ]; then
+#             prev_maxf="$now_maxf"
+#             cpuids[${#cpuids[@]}]="$i"
+#         fi
+#     done
+
+#     local vals
+#     vals=($2)
+
+#     local composed=""
+#     for i in ${!cpuids[@]}; do
+#         composed="$composed ${cpuids[$i]}:${vals[$i]}"
+#     done
+
+#     $($1 "$composed")
+# }
 
 # $1:upmigrate $2:downmigrate $3:group_upmigrate $4:group_downmigrate
 set_sched_migrate()
