@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200401
+# Version: 20200404
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -106,6 +106,24 @@ change_proc_cgroup()
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
         echo $temp_pid > "/dev/$3/$2/cgroup.procs"
+    done
+}
+
+# $1:task_name $2:thread_name $3:cgroup_name $4:"cpuset"/"stune"
+change_thread_cgroup()
+{
+    # avoid matching grep itself
+    # ps -Ao pid,args | grep kswapd
+    # 150 [kswapd0]
+    # 16490 grep kswapd
+    local ps_ret
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            if [ "$(grep "$2" /proc/$temp_pid/task/$temp_tid/comm)" != "" ]; then
+                echo "$temp_tid" > "/dev/$4/$3/tasks"
+            fi
+        done
     done
 }
 

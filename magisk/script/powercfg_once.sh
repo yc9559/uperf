@@ -42,8 +42,13 @@ lock_val "0" $KSGL/force_bus_on
 lock_val "0" $KSGL/force_clk_on
 lock_val "0" $KSGL/force_rail_on
 
+# cleanup top-app cpuset
+for p in $(cat /dev/cpuset/top-app/tasks); do
+    echo "$p" > /dev/cpuset/foreground/tasks
+done
+
 # treat crtc_commit as background, avoid display preemption on big
-change_task_cgroup "crtc_commit" "system-background" "cpuset"
+change_task_cgroup "crtc_commit" "background" "cpuset"
 
 # fix laggy bilibili feed scrolling
 change_task_cgroup "servicemanager" "top-app" "cpuset"
@@ -58,6 +63,10 @@ change_task_cgroup "surfaceflinger" "foreground" "stune"
 # fix system_server in /dev/stune/top-app/cgroup.procs
 change_proc_cgroup "system_server" "top-app" "cpuset"
 change_proc_cgroup "system_server" "foreground" "stune"
+# ...but exclude UI related
+change_thread_cgroup "system_server" "android.anim" "top-app" "stune"
+change_thread_cgroup "system_server" "android.anim.lf" "top-app" "stune"
+change_thread_cgroup "system_server" "android.ui" "top-app" "stune"
 
 # reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
 change_task_cgroup ".hardware." "background" "cpuset"
@@ -167,10 +176,11 @@ else
     set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
 fi
 # more conservative governor
-set_governor_param "schedutil/hispeed_load" "0:90 2:90 4:90 6:90 7:90"
+set_governor_param "schedutil/hispeed_load" "0:95 2:95 4:95 6:95 7:95"
 set_governor_param "schedutil/hispeed_freq" "0:1200000 2:1200000 4:1200000 6:1200000 7:1200000"
-set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
-set_governor_param "schedutil/pl" "0:0"
+set_governor_param "schedutil/pl" "0:0 2:0 4:0 6:0 7:0"
+set_governor_param "schedutil/hispeed_load" "0:80"
+set_governor_param "schedutil/hispeed_freq" "0:1000000"
 # unify hmp interactive governor, only 2+2 4+2 4+4
 set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
 set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1"
@@ -197,7 +207,7 @@ lock_val "1" $SCHED/sched_prefer_sync_wakee_to_waker
 lock_val "200000" $SCHED/sched_freq_inc_notify
 lock_val "400000" $SCHED/sched_freq_dec_notify
 # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
-set_sched_migrate "90 90" "45 45" "120" "100"
+set_sched_migrate "80 90" "40 45" "120" "100"
 # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
 lock_val "30000000" $SCHED/sched_migration_cost_ns
 # OnePlus opchain pins UX threads on the big cluster

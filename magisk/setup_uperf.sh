@@ -45,7 +45,7 @@ _is_eas()
 }
 
 # $1:cpuid
-get_maxfreq()
+_get_maxfreq()
 {
     local fpath="/sys/devices/system/cpu/cpu$1/cpufreq/scaling_available_frequencies"
     local maxfreq="0"
@@ -133,7 +133,8 @@ _get_sdm82x_type()
     l_max="$(_get_maxfreq 0)"
     b_max="$(_get_maxfreq 2)"
 
-    if [ "$l_max" -lt 1600000 ]; then
+    # sdm820 OC 1728/2150
+    if [ "$l_max" -lt 1800000 ]; then
         if [ "$b_max" -gt 2100000 ]; then
             # 1593/2150
             echo "sdm820_hmp"
@@ -171,7 +172,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200402"
+    echo "* Version: DEV 20200405"
     echo ""
 }
 
