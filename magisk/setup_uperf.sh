@@ -1,8 +1,8 @@
 #!/vendor/bin/sh
 # Uperf Setup
 # https://github.com/yc9559/
-# Author: Matt Yang
-# Version: 20200401
+# Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
+# Version: 20200407
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -156,6 +156,15 @@ _get_sdm82x_type()
     fi
 }
 
+_get_e8895_type()
+{
+    if [ "$(_is_eas)" == "true" ]; then
+        echo "e8895_eas"
+    else
+        echo "e8895_hmp"
+    fi
+}
+
 # $1:cfg_name
 _setup_platform_file()
 {
@@ -167,12 +176,44 @@ _setup_platform_file()
     fi
 }
 
+# $1:board_name
+_get_cfgname()
+{
+    local ret
+    case "$1" in
+    "kona")          ret="$(_get_sdm865_type)" ;;
+    "msmnile")       ret="sdm855" ;;
+    "sdm845")        ret="sdm845" ;;
+    "lito")          ret="sdm765" ;;
+    "sm6150")        ret="$(_get_sm6150_type)" ;;
+    "sdm710")        ret="sdm710" ;;
+    "msm8953")       ret="sdm625" ;;
+    "msm8953pro")    ret="sdm626" ;;
+    "sdm660")        ret="$(_get_sdm660_type)" ;;
+    "sdm636")        ret="$(_get_sdm636_type)" ;;
+    "trinket")       ret="sdm665" ;;
+    "msm8976")       ret="sdm652" ;;
+    "msm8956")       ret="sdm650" ;;
+    "msm8998")       ret="$(_get_sdm835_type)" ;;
+    "msm8996")       ret="$(_get_sdm82x_type)" ;;
+    "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
+    "universal9825") ret="e9820" ;;
+    "universal9820") ret="e9820" ;;
+    "universal9810") ret="e9810" ;;
+    "universal8895") ret="$(_get_e8895_type)" ;;
+    "universal8890") ret="e8890" ;;
+    "universal7420") ret="e7420" ;;
+    *)               ret="unsupported" ;;
+    esac
+    echo "$ret"
+}
+
 uperf_print_banner()
 {
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200405"
+    echo "* Version: DEV 20200407"
     echo ""
 }
 
@@ -182,31 +223,11 @@ uperf_install()
     local cfgname
 
     target="$(getprop ro.board.platform)"
-    [ "$target" == "" ] && target="unknown"
-
-    case "$target" in
-    "kona")         cfgname="$(_get_sdm865_type)" ;;
-    "msmnile")      cfgname="sdm855" ;;
-    "sdm845")       cfgname="sdm845" ;;
-    "lito")         cfgname="sdm765" ;;
-    "sm6150")       cfgname="$(_get_sm6150_type)" ;;
-    "sdm710")       cfgname="sdm710" ;;
-    "msm8953")      cfgname="sdm625" ;;
-    "msm8953pro")   cfgname="sdm626" ;;
-    "sdm660")       cfgname="$(_get_sdm660_type)" ;;
-    "sdm636")       cfgname="$(_get_sdm636_type)" ;;
-    "trinket")      cfgname="sdm665" ;;
-    "msm8976")      cfgname="sdm652" ;;
-    "msm8956")      cfgname="sdm650" ;;
-    "msm8998")      cfgname="$(_get_sdm835_type)" ;;
-    "msm8996"|"msm8996pro") cfgname="$(_get_sdm82x_type)" ;;
-    "universal9820"|"universal9825") cfgname="e9820" ;;
-    "universal9810") cfgname="e9810" ;;
-    "universal8895") cfgname="e8895" ;;
-    "universal8890") cfgname="e8890" ;;
-    "universal7420") cfgname="e7420" ;;
-    *)  cfgname="unsupported" ;;
-    esac
+    cfgname="$(_get_cfgname $target)"
+    if [ "$cfgname" == "unsupported" ]; then
+        target="$(getprop ro.product.board)"
+        cfgname="$(_get_cfgname $target)"
+    fi
 
     if [ "$cfgname" != "unsupported" ]; then
         echo "- The platform name is $target. Use $cfgname.json"

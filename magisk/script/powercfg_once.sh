@@ -179,7 +179,7 @@ fi
 set_governor_param "schedutil/hispeed_load" "0:95 2:95 4:95 6:95 7:95"
 set_governor_param "schedutil/hispeed_freq" "0:1200000 2:1200000 4:1200000 6:1200000 7:1200000"
 set_governor_param "schedutil/pl" "0:0 2:0 4:0 6:0 7:0"
-set_governor_param "schedutil/hispeed_load" "0:80"
+set_governor_param "schedutil/hispeed_load" "0:90"
 set_governor_param "schedutil/hispeed_freq" "0:1000000"
 # unify hmp interactive governor, only 2+2 4+2 4+4
 set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
@@ -219,3 +219,4 @@ lock_val "0" $LPM/sleep_disabled
 
 # start uperf once only
 uperf_start
+sleep 1
