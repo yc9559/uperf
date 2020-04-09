@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200407
+# Version: 20200409
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -112,6 +112,31 @@ _get_sdm660_type()
 
 }
 
+_get_sdm626_type()
+{
+    if [ "$(_is_eas)" == "true" ]; then
+        echo "sdm626_eas"
+    else
+        echo "sdm626_hmp"
+    fi
+}
+
+_get_sdm625_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 4)"
+    # sdm625 & sdm626 may share the same platform name
+    if [ "$b_max" -lt 2100000 ]; then
+        if [ "$(_is_eas)" == "true" ]; then
+            echo "sdm625_eas"
+        else
+            echo "sdm625_hmp"
+        fi
+    else
+        echo "$(_get_sdm626_type)"
+    fi
+}
+
 _get_sdm835_type()
 {
     if [ "$(_is_eas)" == "true" ]; then
@@ -187,8 +212,8 @@ _get_cfgname()
     "lito")          ret="sdm765" ;;
     "sm6150")        ret="$(_get_sm6150_type)" ;;
     "sdm710")        ret="sdm710" ;;
-    "msm8953")       ret="sdm625" ;;
-    "msm8953pro")    ret="sdm626" ;;
+    "msm8953")       ret="$(_get_sdm625_type)" ;;
+    "msm8953pro")    ret="$(_get_sdm626_type)" ;;
     "sdm660")        ret="$(_get_sdm660_type)" ;;
     "sdm636")        ret="$(_get_sdm636_type)" ;;
     "trinket")       ret="sdm665" ;;
@@ -213,7 +238,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200407"
+    echo "* Version: DEV 20200409"
     echo ""
 }
 

@@ -14,3 +14,4 @@ Userspace performance controller for android
 @Universes(coolapk)  
 @哔哩哔哩弹慕网(coolapk)  
 @我心飞翔的安(coolapk)  
+@Superpinkcat(coolapk)  

@@ -2,7 +2,7 @@
 # Uperf Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200407
+# Version: 20200409
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -32,11 +32,12 @@ uperf_set_powermode()
 uperf_status()
 {
     # (uperfd & uperf) or (uperfd & new_uperf & old_uperf)
-    if [ "$(ps -A | grep "$UPERF_NAME" | wc -l)" -ge 2 ]; then
-        echo "Running. Details see $uperf_log_path."
-    else
-        echo "Not running. Reasons see $uperf_log_path."
-    fi
+    # if [ "$(ps -A | grep "$UPERF_NAME" | wc -l)" -ge 2 ]; then
+    #     echo "Running. Details see $uperf_log_path."
+    # else
+    #     echo "Not running. Reasons see $uperf_log_path."
+    # fi
+    echo "Details see $uperf_log_path."
 }
 
 uperf_stop()
