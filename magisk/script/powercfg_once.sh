@@ -11,12 +11,12 @@ BASEDIR="$(dirname "$0")"
 
 # unify schedtune misc
 # android 10 doesn't have schedtune.sched_boost_enabled exposed, default = true
-mutate "0" $ST_BACK/schedtune.boost
-mutate "0" $ST_BACK/schedtune.prefer_idle
-mutate "0" $ST_FORE/schedtune.boost
-mutate "0" $ST_FORE/schedtune.prefer_idle
-mutate "0" $ST_TOP/schedtune.boost
-mutate "0" $ST_TOP/schedtune.prefer_idle
+lock_val "0" $ST_BACK/schedtune.boost
+lock_val "0" $ST_BACK/schedtune.prefer_idle
+lock_val "0" $ST_FORE/schedtune.boost
+lock_val "0" $ST_FORE/schedtune.prefer_idle
+lock_val "0" $ST_TOP/schedtune.boost
+lock_val "0" $ST_TOP/schedtune.prefer_idle
 
 # CFQ io scheduler takes cgroup into consideration
 lock_val "cfq" $SDA_Q/scheduler
@@ -82,8 +82,8 @@ change_task_affinity ".hardware.display" "ff"
 # provide best performance for fingerprint service
 change_task_cgroup ".hardware.biometrics.fingerprint" "rt" "stune"
 change_task_nice ".hardware.biometrics.fingerprint" "-20"
-mutate "100" $ST_RT/schedtune.boost
-mutate "1" $ST_RT/schedtune.prefer_idle
+lock_val "100" $ST_RT/schedtune.boost
+lock_val "1" $ST_RT/schedtune.prefer_idle
 
 # try to disable all kernel input boost
 # Qualcomm
@@ -96,17 +96,17 @@ lock_val "0" /sys/module/cpu_boost/parameters/boost_ms
 lock_val "0" /sys/power/pnpmgr/touch_boost
 lock_val "0" /sys/power/pnpmgr/long_duration_touch_boost
 # Samsung
-mutate "0" /sys/class/input_booster/level
-mutate "0" /sys/class/input_booster/head
-mutate "0" /sys/class/input_booster/tail
+lock_val "0" /sys/class/input_booster/level
+lock_val "0" /sys/class/input_booster/head
+lock_val "0" /sys/class/input_booster/tail
 # Samsung EPIC interfaces
-mutate "0" /dev/cluster0_freq_min
-mutate "0" /dev/cluster1_freq_min
-mutate "0" /dev/cluster2_freq_min
+# lock_val "0" /dev/cluster0_freq_min
+# lock_val "0" /dev/cluster1_freq_min
+# lock_val "0" /dev/cluster2_freq_min
 # lock_val "0" /dev/bus_throughput
 # lock_val "0" /dev/gpu_freq_min
 # Samsung /kernel/sched/ems/...
-mutate "0" /sys/kernel/ems/eff_mode
+# lock_val "0" /sys/kernel/ems/eff_mode
 # 3rd
 lock_val "0" /sys/kernel/cpu_input_boost/enabled
 lock_val "0" /sys/kernel/cpu_input_boost/ib_freqs
@@ -150,14 +150,14 @@ stop oneplus_brain_service
 # stop vendor.power-hal-1-3
 
 # Exynos hotplug
-mutate "0" /sys/power/cpuhotplug/enabled
-mutate "0" $CPU/cpuhotplug/enabled
+lock_val "0" /sys/power/cpuhotplug/enabled
+lock_val "0" $CPU/cpuhotplug/enabled
 # turn off msm_thermal
 lock_val "0" /sys/module/msm_thermal/core_control/enabled
 lock_val "N" /sys/module/msm_thermal/parameters/enabled
 # bring all cores online
 for i in 0 1 2 3 4 5 6 7 8 9; do
-    mutate "1" $CPU/cpu$i/online
+    lock_val "1" $CPU/cpu$i/online
 done
 
 # no msm_performance limit
