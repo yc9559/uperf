@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200411
+# Version: 20200414
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -212,6 +212,7 @@ _get_cfgname()
     "lito")          ret="sdm765" ;;
     "sm6150")        ret="$(_get_sm6150_type)" ;;
     "sdm710")        ret="sdm710" ;;
+    "msm8939")       ret="sdm616" ;;
     "msm8953")       ret="$(_get_sdm625_type)" ;;
     "msm8953pro")    ret="$(_get_sdm626_type)" ;;
     "sdm660")        ret="$(_get_sdm660_type)" ;;
@@ -222,8 +223,8 @@ _get_cfgname()
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
-    # "universal9825") ret="e9820" ;;
-    # "universal9820") ret="e9820" ;;
+    "universal9825") ret="e9820" ;;
+    "universal9820") ret="e9820" ;;
     "universal9810") ret="e9810" ;;
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="e8890" ;;
@@ -238,7 +239,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200411"
+    echo "* Version: DEV 20200414"
     echo ""
 }
 

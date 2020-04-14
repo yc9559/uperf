@@ -2,7 +2,7 @@
 # Uperf Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200411
+# Version: 20200413
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -49,7 +49,12 @@ uperf_start()
 {
     # CANNOT LINK EXECUTABLE ".../bin/uperf": "/apex/com.android.runtime/lib64/libc++.so" is 64-bit instead of 32-bit
     # ...because LD_LIBRARY_PATH=":/apex/com.android.runtime/lib64"
-    LD_LIBRARY_PATH=""
+    # LD_LIBRARY_PATH=""
+
+    # raise inotify limit
+    lock_val "131072" /proc/sys/fs/inotify/max_queued_events
+    lock_val "131072" /proc/sys/fs/inotify/max_user_watches
+    lock_val "1024" /proc/sys/fs/inotify/max_user_instances
 
     # pretend to be system binary
     local uperf_bin_path
