@@ -105,6 +105,8 @@ print_modname()
 # Copy/extract your module files into $MODPATH in on_install.
 on_install()
 {
+    $BOOTMODE || abort "! Uperf cannot be installed in recovery."
+
     ui_print "- Extracting module files"
     unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH > /dev/null
     # use universal setup.sh

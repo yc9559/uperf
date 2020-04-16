@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200414
+# Version: 20200416
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -223,8 +223,8 @@ _get_cfgname()
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
-    "universal9825") ret="e9820" ;;
-    "universal9820") ret="e9820" ;;
+    "universal9825") ret="e9820" || echo "! Uperf may have compatibility issuses on Exynos 9825 platform." ;;
+    "universal9820") ret="e9820" || echo "! Uperf may have compatibility issuses on Exynos 9820 platform." ;;
     "universal9810") ret="e9810" ;;
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="e8890" ;;
@@ -239,7 +239,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200414"
+    echo "* Version: DEV 20200416"
     echo ""
 }
 

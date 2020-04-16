@@ -211,7 +211,9 @@ lock_val "1" $SCHED/sched_prefer_sync_wakee_to_waker
 lock_val "200000" $SCHED/sched_freq_inc_notify
 lock_val "400000" $SCHED/sched_freq_dec_notify
 # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
-set_sched_migrate "80 90" "60 45" "120" "100"
+# The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
+# However in EAS model A76's efficiency is 1.7x of A55's, so the migrate thresholds need compensate.
+set_sched_migrate "80 90" "30 60" "120" "100"
 # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
 lock_val "30000000" $SCHED/sched_migration_cost_ns
 # OnePlus opchain pins UX threads on the big cluster
@@ -220,6 +222,7 @@ lock_val "0" /sys/module/opchain/parameters/chain_on
 # C-state controller
 lock_val "1" $LPM/lpm_prediction
 lock_val "0" $LPM/sleep_disabled
+lock_val "25" $LPM/bias_hyst
 
 # start uperf once only
 uperf_start
