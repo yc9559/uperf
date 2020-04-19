@@ -2,7 +2,7 @@
 # Uperf Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200413
+# Version: 20200418
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -47,18 +47,15 @@ uperf_stop()
 
 uperf_start()
 {
-    # CANNOT LINK EXECUTABLE ".../bin/uperf": "/apex/com.android.runtime/lib64/libc++.so" is 64-bit instead of 32-bit
-    # ...because LD_LIBRARY_PATH=":/apex/com.android.runtime/lib64"
-    # LD_LIBRARY_PATH=""
-
     # raise inotify limit
     lock_val "131072" /proc/sys/fs/inotify/max_queued_events
     lock_val "131072" /proc/sys/fs/inotify/max_user_watches
     lock_val "1024" /proc/sys/fs/inotify/max_user_instances
 
-    # pretend to be system binary
-    local uperf_bin_path
-    uperf_bin_path="$MODULE_PATH/$UPERF_REL/$UPERF_NAME"
-    [ -f "/system/bin/$UPERF_NAME" ] && uperf_bin_path="/system/bin/$UPERF_NAME"
-    "$uperf_bin_path" -o "$uperf_log_path" "$uperf_config_path" 2>> "$uperf_log_path"
+    # start uperf
+    "$MODULE_PATH/$UPERF_REL/$UPERF_NAME" -o "$uperf_log_path" "$uperf_config_path" 2>> "$uperf_log_path"
+    # waiting for uperf initialization
+    sleep 1
+    # uperf shouldn't preempt foreground tasks
+    change_task_cgroup "$UPERF_NAME" "background" "cpuset"
 }

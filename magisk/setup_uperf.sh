@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200416
+# Version: 20200419
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -239,7 +239,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200416"
+    echo "* Version: DEV 20200419"
     echo ""
 }
 
@@ -258,8 +258,8 @@ uperf_install()
     if [ "$cfgname" != "unsupported" ]; then
         echo "- The platform name is $target. Use $cfgname.json"
         _setup_platform_file "$cfgname"
-        _set_perm_recursive $BASEDIR 0 0 0755 0644 u:object_r:rootfs:s0
-        _set_perm_recursive $BASEDIR/bin 0 0 0755 0755 u:object_r:rootfs:s0
+        _set_perm_recursive $BASEDIR 0 0 0755 0644
+        _set_perm_recursive $BASEDIR/bin 0 0 0755 0755
         # in case of set_perm_recursive is broken
         chmod 0755 $BASEDIR/bin/*
     else

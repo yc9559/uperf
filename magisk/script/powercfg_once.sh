@@ -226,4 +226,3 @@ lock_val "25" $LPM/bias_hyst
 
 # start uperf once only
 uperf_start
-sleep 1
