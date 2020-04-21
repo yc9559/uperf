@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200419
+# Version: 20200421
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -239,7 +239,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200419"
+    echo "* Version: DEV 20200421"
     echo ""
 }
 
