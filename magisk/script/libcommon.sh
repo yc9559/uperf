@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200404
+# Version: 20200426
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -173,4 +173,13 @@ match_linux_version()
 get_platform_name()
 {
     echo "$(getprop ro.board.platform)"
+}
+
+is_aarch64()
+{
+    if [ "$(getprop ro.product.cpu.abi)" == "arm64-v8a" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
 }

@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200421
+# Version: 20200428
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -35,6 +35,15 @@ _set_perm_recursive() {
     done
 }
 
+_is_aarch64()
+{
+    if [ "$(getprop ro.product.cpu.abi)" == "arm64-v8a" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
 _is_eas()
 {
     if [ "$(grep sched /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors)" != "" ]; then
@@ -61,6 +70,15 @@ _get_maxfreq()
     echo "$maxfreq"
 }
 
+_get_socid()
+{
+    if [ -f /sys/devices/soc0/soc_id ]; then
+        echo "$(cat /sys/devices/soc0/soc_id)"
+    else
+        echo "$(cat /sys/devices/system/soc/soc0/id)"
+    fi
+}
+
 _get_sm6150_type()
 {
     [ -f /sys/devices/soc0/soc_id ] && SOC_ID="$(cat /sys/devices/soc0/soc_id)"
@@ -84,6 +102,16 @@ _get_sdm865_type()
     else
         echo "sdm865_lp5"
     fi
+}
+
+_get_msm8916_type()
+{
+    case "$(_get_socid)" in
+    "206"|"247"|"248"|"249"|"250") echo "msm8916" ;;
+    "233"|"240"|"242") echo "sdm610" ;;
+    "239"|"241"|"263"|"268"|"269"|"270"|"271") echo "sdm616" ;;
+    *) echo "msm8916" ;;
+    esac
 }
 
 _get_sdm636_type()
@@ -212,6 +240,7 @@ _get_cfgname()
     "lito")          ret="sdm765" ;;
     "sm6150")        ret="$(_get_sm6150_type)" ;;
     "sdm710")        ret="sdm710" ;;
+    "msm8916")       ret="$(_get_msm8916_type)" ;;
     "msm8939")       ret="sdm616" ;;
     "msm8953")       ret="$(_get_sdm625_type)" ;;
     "msm8953pro")    ret="$(_get_sdm626_type)" ;;
@@ -239,7 +268,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200421"
+    echo "* Version: DEV 20200428"
     echo ""
 }
 
@@ -269,5 +298,28 @@ uperf_install()
     echo "- Uperf installation was successful."
 }
 
+sfa_install()
+{
+    local sfanalysis_path
+    local target_lib_path
+    if [ "$(_is_aarch64)" == "true" ]; then
+        sfanalysis_path="$BASEDIR/sfanalysis/arm64-v8a"
+        target_lib_path="$BASEDIR/system/lib64"
+    else
+        sfanalysis_path="$BASEDIR/sfanalysis/armeabi-v7a"
+        target_lib_path="$BASEDIR/system/lib"
+    fi
+
+    mkdir -p "$target_lib_path"
+    cp "$sfanalysis_path/injector" "$BASEDIR/bin/"
+    cp "$sfanalysis_path/libsfanalysis.so" "$target_lib_path"
+
+    _set_perm "$BASEDIR/bin/injector" 0 0 0755 u:object_r:system_file:s0
+    _set_perm "$target_lib_path/libsfanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
+    # in case of set_perm_recursive is broken
+    chmod 0755 $BASEDIR/bin/*
+}
+
 uperf_print_banner
 uperf_install
+sfa_install

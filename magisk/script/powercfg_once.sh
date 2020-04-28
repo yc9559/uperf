@@ -8,6 +8,7 @@ BASEDIR="$(dirname "$0")"
 . $BASEDIR/libcommon.sh
 . $BASEDIR/libpowercfg.sh
 . $BASEDIR/libuperf.sh
+. $BASEDIR/libsfanalysis.sh
 
 # unify schedtune misc
 # android 10 doesn't have schedtune.sched_boost_enabled exposed, default = true
@@ -223,6 +224,9 @@ lock_val "0" /sys/module/opchain/parameters/chain_on
 lock_val "1" $LPM/lpm_prediction
 lock_val "0" $LPM/sleep_disabled
 lock_val "25" $LPM/bias_hyst
+
+# start surfaceflinger analysis
+sfa_start
 
 # start uperf once only
 uperf_start

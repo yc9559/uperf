@@ -9,7 +9,8 @@ Userspace performance controller for android
 
 ## Credit
 
-@AndroidDumps   
+[@AndroidDumps](https://github.com/AndroidDumps)   
+[@shunix](https://github.com/shunix)   
 @HEX_Stan(coolapk)  
 @僞裝灬(coolapk)  
 @Yoooooo(coolapk)  

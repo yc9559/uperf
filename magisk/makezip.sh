@@ -5,7 +5,7 @@ zipname="uperf-magisk.zip"
 echo "Compile Uperf binary..."
 cd ..
 make clean 1> /dev/null
-make release -j8 1> /dev/null
+make ndkbuild 1> /dev/null
 
 echo "Compile Uperf configs..."
 cd config
