@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200426
+# Version: 20200501
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -173,6 +173,12 @@ match_linux_version()
 get_platform_name()
 {
     echo "$(getprop ro.board.platform)"
+}
+
+# return_nr_core
+get_nr_core()
+{
+    echo "$(cat /proc/stat | grep cpu[0-9] | wc -l)"
 }
 
 is_aarch64()

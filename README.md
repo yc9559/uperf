@@ -28,3 +28,6 @@ Userspace performance controller for android
 @瓜瓜皮(coolapk)  
 @Universes(coolapk)  
 @Superpinkcat(coolapk)  
+@asto18089(coolapk)  
+@顺其自然的肥肉(coolapk)  
+@酷斗吧(coolapk)  

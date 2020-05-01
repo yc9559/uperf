@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200428
+# Version: 20200501
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -33,6 +33,11 @@ _set_perm_recursive() {
     find $1 -type f -o -type l 2>/dev/null | while read file; do
         _set_perm $file $2 $3 $5 $6
     done
+}
+
+_get_nr_core()
+{
+    echo "$(cat /proc/stat | grep cpu[0-9] | wc -l)"
 }
 
 _is_aarch64()
@@ -111,6 +116,22 @@ _get_msm8916_type()
     "233"|"240"|"242") echo "sdm610" ;;
     "239"|"241"|"263"|"268"|"269"|"270"|"271") echo "sdm616" ;;
     *) echo "msm8916" ;;
+    esac
+}
+
+_get_msm8952_type()
+{
+    case "$(_get_socid)" in
+    "264"|"289")
+        echo "msm8952"
+    ;;
+    *)
+        if [ "$(_get_nr_core)" == "8" ]; then
+            echo "sdm652"
+        else
+            echo "sdm650"
+        fi
+    ;;
     esac
 }
 
@@ -242,6 +263,7 @@ _get_cfgname()
     "sdm710")        ret="sdm710" ;;
     "msm8916")       ret="$(_get_msm8916_type)" ;;
     "msm8939")       ret="sdm616" ;;
+    "msm8952")       ret="$(_get_msm8952_type)" ;;
     "msm8953")       ret="$(_get_sdm625_type)" ;;
     "msm8953pro")    ret="$(_get_sdm626_type)" ;;
     "sdm660")        ret="$(_get_sdm660_type)" ;;
@@ -268,7 +290,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200428"
+    echo "* Version: DEV 20200501"
     echo ""
 }
 
@@ -320,6 +342,15 @@ sfa_install()
     chmod 0755 $BASEDIR/bin/*
 }
 
+powerhal_stub_install()
+{
+    # compatiable with ver.0428 and lower
+    # do not place empty powerhint.json if it doesn't exist in system
+    [ "$(wc -l /vendor/etc/powerhint.json)" -le "5" ] && rm $BASEDIR/vendor/etc/powerhint.json
+}
+
 uperf_print_banner
 uperf_install
 sfa_install
+powerhal_stub_install
+exit 0
