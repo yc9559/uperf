@@ -229,4 +229,5 @@ lock_val "25" $LPM/bias_hyst
 sfa_start
 
 # start uperf once only
+uperf_stop
 uperf_start

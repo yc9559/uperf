@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200501
+# Version: 20200503
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -290,7 +290,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200501"
+    echo "* Version: DEV 20200503"
     echo ""
 }
 
@@ -344,9 +344,7 @@ sfa_install()
 
 powerhal_stub_install()
 {
-    # compatiable with ver.0428 and lower
-    # do not place empty powerhint.json if it doesn't exist in system
-    [ "$(wc -l /vendor/etc/powerhint.json)" -le "5" ] && rm $BASEDIR/vendor/etc/powerhint.json
+    _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
 }
 
 uperf_print_banner
