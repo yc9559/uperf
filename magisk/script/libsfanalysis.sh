@@ -2,7 +2,7 @@
 # Surfaceflinger Analysis Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200503
+# Version: 20200505
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -36,8 +36,8 @@ sfa_start()
 
     # fallback to standlone mode
     if [ ! -f "$lib_path" ]; then
-        lib_path="$BASEDIR/$lib_path"
-        setenforce 0
+        lib_path="$MODULE_PATH/$lib_path"
+        # setenforce 0
     fi
 
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > /cache/injector.log

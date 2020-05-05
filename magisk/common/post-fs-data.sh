@@ -1,4 +1,6 @@
 MODDIR=${0%/*}
 
 # do not place empty powerhint.json if it doesn't exist in system
-[ ! -f /vendor/etc/powerhint.json ] && rm $MODDIR/system/vendor/etc/powerhint.json
+if [ -f /vendor/etc/powerhint.json ]; then
+    cp $MODDIR/system/vendor/etc/powerhint.json.override $MODDIR/system/vendor/etc/powerhint.json
+fi

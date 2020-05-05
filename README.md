@@ -11,6 +11,7 @@ Userspace performance controller for android
 
 [@AndroidDumps](https://github.com/AndroidDumps)   
 [@shunix](https://github.com/shunix)   
+@YMJ   
 @HEX_Stan(coolapk)  
 @僞裝灬(coolapk)  
 @Yoooooo(coolapk)  
@@ -31,3 +32,4 @@ Userspace performance controller for android
 @asto18089(coolapk)  
 @顺其自然的肥肉(coolapk)  
 @酷斗吧(coolapk)  
+@何为永恒(coolapk)  

@@ -43,10 +43,10 @@ lock_val "0" $KSGL/force_bus_on
 lock_val "0" $KSGL/force_clk_on
 lock_val "0" $KSGL/force_rail_on
 
-# cleanup top-app cpuset
-for p in $(cat /dev/cpuset/top-app/tasks); do
-    echo "$p" > /dev/cpuset/foreground/tasks
-done
+# # cleanup top-app cpuset
+# for p in $(cat /dev/cpuset/top-app/tasks); do
+#     echo "$p" > /dev/cpuset/foreground/tasks
+# done
 
 # treat crtc_commit as background, avoid display preemption on big
 change_task_cgroup "crtc_commit" "background" "cpuset"
@@ -71,16 +71,16 @@ change_thread_cgroup "system_server" "android.ui" "top-app" "stune"
 # ...and pin HeapTaskDaemon on LITTLE
 change_thread_cgroup "system_server" "HeapTaskDaemon" "background" "cpuset"
 
-# reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
-change_task_cgroup ".hardware." "background" "cpuset"
-change_task_affinity ".hardware." "0f"
-# ...but exclude fingerprint&camera&display service for speed
-change_task_cgroup ".hardware.biometrics.fingerprint" "" "cpuset"
-change_task_cgroup ".hardware.camera.provider" "" "cpuset"
-change_task_cgroup ".hardware.display" "" "cpuset"
-change_task_affinity ".hardware.biometrics.fingerprint" "ff"
-change_task_affinity ".hardware.camera.provider" "ff"
-change_task_affinity ".hardware.display" "ff"
+# # reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
+# change_task_cgroup ".hardware." "background" "cpuset"
+# change_task_affinity ".hardware." "0f"
+# # ...but exclude fingerprint&camera&display service for speed
+# change_task_cgroup ".hardware.biometrics.fingerprint" "" "cpuset"
+# change_task_cgroup ".hardware.camera.provider" "" "cpuset"
+# change_task_cgroup ".hardware.display" "" "cpuset"
+# change_task_affinity ".hardware.biometrics.fingerprint" "ff"
+# change_task_affinity ".hardware.camera.provider" "ff"
+# change_task_affinity ".hardware.display" "ff"
 
 # provide best performance for fingerprint service
 change_task_cgroup ".hardware.biometrics.fingerprint" "rt" "stune"

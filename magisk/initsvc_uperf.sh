@@ -15,5 +15,5 @@ wait_until_login()
 }
 
 wait_until_login
-sleep 5
+sleep 60
 sh $BASEDIR/run_uperf.sh
