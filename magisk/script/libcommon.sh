@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200505
+# Version: 20200507
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
