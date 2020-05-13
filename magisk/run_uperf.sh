@@ -16,6 +16,6 @@ chmod 755 /data/powercfg-base.sh
 # powercfg path provided by magisk module
 echo "sh $SCRIPT_DIR/powercfg_main.sh \"\$1\"" >> /data/powercfg.sh
 
-# not relying on executable permissions
+sh $SCRIPT_DIR/start_sfanalysis.sh
 sh $SCRIPT_DIR/powercfg_main.sh
 sh $SCRIPT_DIR/powercfg_once.sh

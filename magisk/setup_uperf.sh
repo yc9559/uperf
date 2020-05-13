@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200507
+# Version: 20200513
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -106,6 +106,15 @@ _get_sdm865_type()
         echo "sdm865_lp4x"
     else
         echo "sdm865_lp5"
+    fi
+}
+
+_get_sdm76x_type()
+{
+    if [ "$(cat /sys/devices/soc0/revision)" == "2.0" ]; then
+        echo "sdm768"
+    else
+        echo "sdm765"
     fi
 }
 
@@ -258,7 +267,7 @@ _get_cfgname()
     "kona")          ret="$(_get_sdm865_type)" ;;
     "msmnile")       ret="sdm855" ;;
     "sdm845")        ret="sdm845" ;;
-    "lito")          ret="sdm765" ;;
+    "lito")          ret="$(_get_sdm76x_type)" ;;
     "sm6150")        ret="$(_get_sm6150_type)" ;;
     "sdm710")        ret="sdm710" ;;
     "msm8916")       ret="$(_get_msm8916_type)" ;;
@@ -290,7 +299,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: DEV 20200507"
+    echo "* Version: DEV 20200513"
     echo ""
 }
 
@@ -340,6 +349,9 @@ sfa_install()
     _set_perm "$target_lib_path/libsfanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
     # in case of set_perm_recursive is broken
     chmod 0755 $BASEDIR/bin/*
+
+    # create sfanalysis enable flag
+    touch $BASEDIR/enable_sfanalysis
 }
 
 powerhal_stub_install()

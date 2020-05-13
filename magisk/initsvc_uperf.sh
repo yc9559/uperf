@@ -9,11 +9,15 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 wait_until_login()
 {
     # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
-    while [ ! -d "/sdcard/Android" ]; do
-        sleep 2
+    local test_file
+    test_file="/sdcard/Android/$(mktemp -u XXXXXXXX)"
+    while [ ! -f "$test_file" ]; do
+        touch "$test_file"
+        sleep 1
     done
+    rm "$test_file"
 }
 
 wait_until_login
-sleep 60
+# do not sleep 60, may causing MIUI 12 launcher freezed by sfanalysis
 sh $BASEDIR/run_uperf.sh

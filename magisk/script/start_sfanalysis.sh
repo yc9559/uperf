@@ -2,7 +2,7 @@
 # Surfaceflinger Analysis Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200507
+# Version: 20200513
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -43,3 +43,5 @@ sfa_start()
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > /cache/injector.log
     "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> /cache/injector.log
 }
+
+[ -f "$MODULE_PATH/enable_sfanalysis" ] && sfa_start

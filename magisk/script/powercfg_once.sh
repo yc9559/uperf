@@ -8,7 +8,6 @@ BASEDIR="$(dirname "$0")"
 . $BASEDIR/libcommon.sh
 . $BASEDIR/libpowercfg.sh
 . $BASEDIR/libuperf.sh
-. $BASEDIR/libsfanalysis.sh
 
 # unify schedtune misc
 # android 10 doesn't have schedtune.sched_boost_enabled exposed, default = true
@@ -71,20 +70,20 @@ change_thread_cgroup "system_server" "android.ui" "top-app" "stune"
 # ...and pin HeapTaskDaemon on LITTLE
 change_thread_cgroup "system_server" "HeapTaskDaemon" "background" "cpuset"
 
-# # reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
-# change_task_cgroup ".hardware." "background" "cpuset"
-# change_task_affinity ".hardware." "0f"
-# # ...but exclude fingerprint&camera&display service for speed
-# change_task_cgroup ".hardware.biometrics.fingerprint" "" "cpuset"
-# change_task_cgroup ".hardware.camera.provider" "" "cpuset"
-# change_task_cgroup ".hardware.display" "" "cpuset"
-# change_task_affinity ".hardware.biometrics.fingerprint" "ff"
-# change_task_affinity ".hardware.camera.provider" "ff"
-# change_task_affinity ".hardware.display" "ff"
+# reduce big cluster wakeup, eg. android.hardware.sensors@1.0-service
+change_task_cgroup ".hardware." "background" "cpuset"
+change_task_affinity ".hardware." "0f"
+# ...but exclude fingerprint&camera&display service for speed
+change_task_cgroup ".hardware.biometrics.fingerprint" "" "cpuset"
+change_task_cgroup ".hardware.camera.provider" "" "cpuset"
+change_task_cgroup ".hardware.display" "" "cpuset"
+change_task_affinity ".hardware.biometrics.fingerprint" "ff"
+change_task_affinity ".hardware.camera.provider" "ff"
+change_task_affinity ".hardware.display" "ff"
 
 # provide best performance for fingerprint service
-change_task_cgroup ".hardware.biometrics.fingerprint" "rt" "stune"
-change_task_nice ".hardware.biometrics.fingerprint" "-20"
+change_task_cgroup ".hardware.biometrics." "rt" "stune"
+change_task_nice ".hardware.biometrics." "-20"
 mutate "100" $ST_RT/schedtune.boost
 mutate "1" $ST_RT/schedtune.prefer_idle
 
@@ -141,9 +140,10 @@ lock_val "0" /sys/module/cpu_input_boost/parameters/flex_boost_freq_hp
 lock_val "0" /sys/module/cpu_input_boost/parameters/flex_boost_freq_lp
 lock_val "0" /sys/module/devfreq_boost/parameters/input_boost_duration
 
-# stop qualcomm perfd
+# try to disable all other userspace performance daemon
+# Qualcomm perfd
 stop perfd
-# stop qualcomm perfd
+# Qualcomm perfhal
 perfhal_stop
 # brain service maybe not smart
 stop oneplus_brain_service
@@ -154,12 +154,37 @@ stop oneplus_brain_service
 # stop vendor.power-hal-1-2
 # stop vendor.power-hal-1-3
 
+# try to disable all hotplug
+# Qualcomm Battery Current Limit
+for mode in /sys/devices/soc.0/qcom,bcl.*/mode; do
+    echo -n "disable" > $mode
+done
+for hotplug_mask in /sys/devices/soc.0/qcom,bcl.*/hotplug_mask; do
+    lock_val "0" $hotplug_mask
+done
+for hotplug_soc_mask in /sys/devices/soc.0/qcom,bcl.*/hotplug_soc_mask; do
+    lock_val "0" $hotplug_soc_mask
+done
+for mode in /sys/devices/soc.0/qcom,bcl.*/mode; do
+    echo -n "enable" > $mode
+done
 # Exynos hotplug
 mutate "0" /sys/power/cpuhotplug/enabled
 mutate "0" $CPU/cpuhotplug/enabled
 # turn off msm_thermal
 lock_val "0" /sys/module/msm_thermal/core_control/enabled
 lock_val "N" /sys/module/msm_thermal/parameters/enabled
+# maybe CAF
+lock_val "0" /proc/sys/kernel/hotplug
+lock_val "1" $CPU/cpu0/rq-stats/hotplug_disable
+# AllWinner H6
+lock_val "1" /sys/kernel/autohotplug/boost_all
+# 3rd
+lock_val "0" /sys/kernel/intelli_plug/intelli_plug_active
+lock_val "0" /sys/module/blu_plug/parameters/enabled
+lock_val "0" /sys/devices/virtual/misc/mako_hotplug_control/enabled
+lock_val "0" /sys/module/autosmp/parameters/enabled
+lock_val "0" /sys/kernel/zen_decision/enabled
 # bring all cores online
 for i in 0 1 2 3 4 5 6 7 8 9; do
     mutate "1" $CPU/cpu$i/online
@@ -224,9 +249,6 @@ lock_val "0" /sys/module/opchain/parameters/chain_on
 lock_val "1" $LPM/lpm_prediction
 lock_val "0" $LPM/sleep_disabled
 lock_val "25" $LPM/bias_hyst
-
-# start surfaceflinger analysis
-sfa_start
 
 # start uperf once only
 uperf_stop
