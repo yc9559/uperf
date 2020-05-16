@@ -2,7 +2,7 @@
 # Surfaceflinger Analysis Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200513
+# Version: 20200516
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -35,13 +35,17 @@ sfa_start()
     fi
 
     # fallback to standlone mode
-    if [ ! -f "$lib_path" ]; then
-        lib_path="$MODULE_PATH/$lib_path"
-        # setenforce 0
-    fi
+    [ ! -f "$lib_path" ] && lib_path="$MODULE_PATH/$lib_path"
 
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > /cache/injector.log
     "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> /cache/injector.log
+
+    # injection failed. Retry after setting SELinux to permissive
+    if [ "$?" != "0" ]; then
+        setenforce 0
+        echo "Retry after setting SELinux to permissive." >> /cache/injector.log
+        "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> /cache/injector.log
+    fi
 }
 
 [ -f "$MODULE_PATH/enable_sfanalysis" ] && sfa_start

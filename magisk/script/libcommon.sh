@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200513
+# Version: 20200516
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -70,8 +70,12 @@ clear_panel()
 wait_until_login()
 {
     # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
-    local test_file
-    test_file="/sdcard/Android/$(mktemp -u XXXXXXXX)"
+    while [ ! -d "/sdcard/Android" ]; do
+        sleep 1
+    done
+
+    local test_file="/sdcard/Android/.PERMISSION_TEST"
+    touch "$test_file"
     while [ ! -f "$test_file" ]; do
         touch "$test_file"
         sleep 1

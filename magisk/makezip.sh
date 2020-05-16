@@ -13,7 +13,7 @@ python3 make_configs.py
 cd ..
 
 echo "Copy files from project..."
-cp uperf magisk/bin/
+cp -r build/uperf magisk/uperf/
 cp -r build/configs/ magisk/config
 
 echo "Make flashable magisk package..."
@@ -22,7 +22,7 @@ rm "$zipname"
 zip "$zipname" -q -9 -r . -x makezip.sh
 
 echo "Cleanup..."
-rm bin/uperf
+rm -r uperf
 rm -r config
 
 echo "Make zip done."

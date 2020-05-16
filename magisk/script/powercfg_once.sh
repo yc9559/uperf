@@ -42,11 +42,6 @@ lock_val "0" $KSGL/force_bus_on
 lock_val "0" $KSGL/force_clk_on
 lock_val "0" $KSGL/force_rail_on
 
-# # cleanup top-app cpuset
-# for p in $(cat /dev/cpuset/top-app/tasks); do
-#     echo "$p" > /dev/cpuset/foreground/tasks
-# done
-
 # treat crtc_commit as background, avoid display preemption on big
 change_task_cgroup "crtc_commit" "background" "cpuset"
 
@@ -82,8 +77,8 @@ change_task_affinity ".hardware.camera.provider" "ff"
 change_task_affinity ".hardware.display" "ff"
 
 # provide best performance for fingerprint service
-change_task_cgroup ".hardware.biometrics." "rt" "stune"
-change_task_nice ".hardware.biometrics." "-20"
+change_task_cgroup ".hardware.biometrics.fingerprint" "rt" "stune"
+change_task_nice ".hardware.biometrics.fingerprint" "-20"
 mutate "100" $ST_RT/schedtune.boost
 mutate "1" $ST_RT/schedtune.prefer_idle
 
@@ -155,30 +150,12 @@ stop oneplus_brain_service
 # stop vendor.power-hal-1-3
 
 # try to disable all hotplug
-# Qualcomm Battery Current Limit
-for mode in /sys/devices/soc.0/qcom,bcl.*/mode; do
-    echo -n "disable" > $mode
-done
-for hotplug_mask in /sys/devices/soc.0/qcom,bcl.*/hotplug_mask; do
-    lock_val "0" $hotplug_mask
-done
-for hotplug_soc_mask in /sys/devices/soc.0/qcom,bcl.*/hotplug_soc_mask; do
-    lock_val "0" $hotplug_soc_mask
-done
-for mode in /sys/devices/soc.0/qcom,bcl.*/mode; do
-    echo -n "enable" > $mode
-done
 # Exynos hotplug
 mutate "0" /sys/power/cpuhotplug/enabled
 mutate "0" $CPU/cpuhotplug/enabled
 # turn off msm_thermal
 lock_val "0" /sys/module/msm_thermal/core_control/enabled
 lock_val "N" /sys/module/msm_thermal/parameters/enabled
-# maybe CAF
-lock_val "0" /proc/sys/kernel/hotplug
-lock_val "1" $CPU/cpu0/rq-stats/hotplug_disable
-# AllWinner H6
-lock_val "1" /sys/kernel/autohotplug/boost_all
 # 3rd
 lock_val "0" /sys/kernel/intelli_plug/intelli_plug_active
 lock_val "0" /sys/module/blu_plug/parameters/enabled
