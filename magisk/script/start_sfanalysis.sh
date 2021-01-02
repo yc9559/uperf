@@ -15,6 +15,7 @@ BASEDIR="$(dirname "$0")"
 SFA_REL="$BIN_DIR"
 SFA_NAME="injector"
 SFA_LIB="libsfanalysis.so"
+SFA_LOG="/data/cache/injector.log"
 
 ###############################
 # SfAnalysis tool functions
@@ -37,14 +38,14 @@ sfa_start()
     # fallback to standlone mode
     [ ! -f "$lib_path" ] && lib_path="$MODULE_PATH/$lib_path"
 
-    echo "$(date '+%Y-%m-%d %H:%M:%S')" > /cache/injector.log
-    "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> /cache/injector.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$SFA_LOG"
+    "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> "$SFA_LOG"
 
     # injection failed. Retry after setting SELinux to permissive
     if [ "$?" != "0" ]; then
         setenforce 0
-        echo "Retry after setting SELinux to permissive." >> /cache/injector.log
-        "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> /cache/injector.log
+        echo "Retry after setting SELinux to permissive." >> "$SFA_LOG"
+        "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> "$SFA_LOG"
     fi
 }
 

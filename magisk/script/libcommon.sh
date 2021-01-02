@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200516
+# Version: 20201206
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -51,7 +51,7 @@ read_cfg_value()
 {
     local value=""
     if [ -f "$PANEL_FILE" ]; then
-        value="$(grep "^$1=" "$PANEL_FILE" | head -n 1 | tr -d ' ' | cut -d= -f2)"
+        value="$(grep -i "^$1=" "$PANEL_FILE" | head -n 1 | tr -d ' ' | cut -d= -f2)"
     fi
     echo "$value"
 }
@@ -69,11 +69,12 @@ clear_panel()
 
 wait_until_login()
 {
-    # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
-    while [ ! -d "/sdcard/Android" ]; do
+    # in case of /data encryption is disabled
+    while [ "$(getprop sys.boot_completed)" != "1" ]; do
         sleep 1
     done
 
+    # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
     local test_file="/sdcard/Android/.PERMISSION_TEST"
     touch "$test_file"
     while [ ! -f "$test_file" ]; do
@@ -84,87 +85,18 @@ wait_until_login()
 }
 
 ###############################
-# Cgroup functions
+# Log
 ###############################
 
-# $1:task_name $2:cgroup_name $3:"cpuset"/"stune"
-change_task_cgroup()
+# $1:content
+log()
 {
-    # avoid matching grep itself
-    # ps -Ao pid,args | grep kswapd
-    # 150 [kswapd0]
-    # 16490 grep kswapd
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            echo "$temp_tid" > "/dev/$3/$2/tasks"
-        done
-    done
+    echo "$1" >> "$LOG_FILE"
 }
 
-# $1:process_name $2:cgroup_name $3:"cpuset"/"stune"
-change_proc_cgroup()
+clear_log()
 {
-    # avoid matching grep itself
-    # ps -Ao pid,args | grep kswapd
-    # 150 [kswapd0]
-    # 16490 grep kswapd
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
-        echo $temp_pid > "/dev/$3/$2/cgroup.procs"
-    done
-}
-
-# $1:task_name $2:thread_name $3:cgroup_name $4:"cpuset"/"stune"
-change_thread_cgroup()
-{
-    # avoid matching grep itself
-    # ps -Ao pid,args | grep kswapd
-    # 150 [kswapd0]
-    # 16490 grep kswapd
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            if [ "$(grep "$2" /proc/$temp_pid/task/$temp_tid/comm)" != "" ]; then
-                echo "$temp_tid" > "/dev/$4/$3/tasks"
-            fi
-        done
-    done
-}
-
-# $1:task_name $2:hex_mask(0x00000003 is CPU0 and CPU1)
-change_task_affinity()
-{
-    # avoid matching grep itself
-    # ps -Ao pid,args | grep kswapd
-    # 150 [kswapd0]
-    # 16490 grep kswapd
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            taskset -p "$2" "$temp_tid" > /dev/null
-        done
-    done
-}
-
-# $1:task_name $2:nice(relative to 120)
-change_task_nice()
-{
-    # avoid matching grep itself
-    # ps -Ao pid,args | grep kswapd
-    # 150 [kswapd0]
-    # 16490 grep kswapd
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            renice "$2" -p "$temp_tid"
-        done
-    done
+    true > "$LOG_FILE"
 }
 
 ###############################
@@ -174,7 +106,7 @@ change_task_nice()
 # $1:"4.14" return:string_in_version
 match_linux_version()
 {
-    echo "$(cat /proc/version | grep "$1")"
+    echo "$(cat /proc/version | grep -i "$1")"
 }
 
 # return:platform_name

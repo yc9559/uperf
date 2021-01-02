@@ -2,7 +2,7 @@
 # Uperf Setup
 # https://github.com/yc9559/
 # Author: Matt Yang & cjybyjk (cjybyjk@gmail.com)
-# Version: 20200516
+# Version: 20201129
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
 
@@ -111,7 +111,7 @@ _get_sdm865_type()
 
 _get_sdm76x_type()
 {
-    if [ "$(cat /sys/devices/soc0/revision)" == "2.0" ]; then
+    if [ "$(_get_maxfreq 7)" -gt 2800000 ]; then
         echo "sdm768"
     else
         echo "sdm765"
@@ -289,6 +289,10 @@ _get_cfgname()
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="e8890" ;;
     "universal7420") ret="e7420" ;;
+    "mt6873")        ret="mt6873" ;;
+    "mt6875")        ret="mt6875" ;;
+    "mt6885")        ret="mt6885" ;;
+    "mt6889")        ret="mt6889" ;;
     *)               ret="unsupported" ;;
     esac
     echo "$ret"
@@ -299,7 +303,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v1 (20200516)"
+    echo "* Version: v2 (20210102)"
     echo ""
 }
 

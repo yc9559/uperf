@@ -24,10 +24,6 @@ KSGL="/sys/class/kgsl/kgsl-3d0"
 DEVFREQ="/sys/class/devfreq"
 LPM="/sys/module/lpm_levels/parameters"
 MSM_PERF="/sys/module/msm_performance/parameters"
-ST_TOP="/dev/stune/top-app"
-ST_FORE="/dev/stune/foreground"
-ST_BACK="/dev/stune/background"
-ST_RT="/dev/stune/rt"
 SDA_Q="/sys/block/sda/queue"
 
 if [ "$(match_linux_version 4.19)" != "" ]; then
@@ -128,32 +124,6 @@ set_corectl_param()
         mutate "$val" $CPU/cpu$key/core_ctl/$1
     done
 }
-
-# array not working in sh shell
-# $1:func $2:percluster_vals
-# set_percluster()
-# {
-#     local cpuids
-#     local prev_maxf="0"
-#     local now_maxf="0"
-#     for i in $(seq 0 9); do
-#         now_maxf="$(get_maxfreq $i)"
-#         if [ "$now_maxf" != "" ] && [ "$now_maxf" != "$prev_maxf" ]; then
-#             prev_maxf="$now_maxf"
-#             cpuids[${#cpuids[@]}]="$i"
-#         fi
-#     done
-
-#     local vals
-#     vals=($2)
-
-#     local composed=""
-#     for i in ${!cpuids[@]}; do
-#         composed="$composed ${cpuids[$i]}:${vals[$i]}"
-#     done
-
-#     $($1 "$composed")
-# }
 
 # $1:upmigrate $2:downmigrate $3:group_upmigrate $4:group_downmigrate
 set_sched_migrate()

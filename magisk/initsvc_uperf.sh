@@ -8,11 +8,12 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 
 wait_until_login()
 {
-    # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
-    while [ ! -d "/sdcard/Android" ]; do
+    # in case of /data encryption is disabled
+    while [ "$(getprop sys.boot_completed)" != "1" ]; do
         sleep 1
     done
 
+    # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
     local test_file="/sdcard/Android/.PERMISSION_TEST"
     touch "$test_file"
     while [ ! -f "$test_file" ]; do
