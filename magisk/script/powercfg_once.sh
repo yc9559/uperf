@@ -22,7 +22,7 @@ unify_cgroup()
     mutate "1" /dev/stune/rt/schedtune.prefer_idle
 
     mutate "0-2,6" /dev/cpuset/foreground/cpus
-    mutate "0-2" /dev/cpuset/background/cpus
+    mutate "0-3" /dev/cpuset/background/cpus
 
     # fix laggy bilibili feed scrolling
     change_task_cgroup "servicemanager" "top-app" "cpuset"
@@ -46,26 +46,28 @@ unify_cgroup()
     unpin_proc "\.hardware\.camera\.provider"
     unpin_proc "\.hardware\.display\."
 
-    # pin system_server in foreground to save bandwidth for UI
-    change_task_cgroup "system_server" "foreground" "cpuset"
-    # ...but exclude Binders
+    # pin system_server in background to save bandwidth for UI
+    change_task_cgroup "system_server" "background" "cpuset"
+    change_task_cgroup "system_server" "top-app" "stune"
+    # ...but exclude Binders and animations
     unpin_thread "system_server" "Binder"
+    unpin_thread "system_server" "android\.anim"
+    unpin_thread "system_server" "android\.ui"
+    pin_thread_on_perf "system_server" "Binder"
+    pin_thread_on_perf "system_server" "android\.anim"
+    pin_thread_on_perf "system_server" "android\.ui"
     # ...set UX pipeline related thread to RT policy
-    change_thread_rt "system_server" "input" "3"
-    change_thread_rt "system_server" "android\.anim" "2"
-    change_thread_rt "system_server" "android\.ui" "2"
-    # ...and pin hardware related on LITTLE
-    pin_thread_on_pwr "system_server" "sensor"
-    pin_thread_on_pwr "system_server" "wifi"
-    pin_thread_on_pwr "system_server" "network"
-    pin_thread_on_pwr "system_server" "input"
-    pin_thread_on_pwr "system_server" "power"
-    pin_thread_on_pwr "system_server" "android\.io"
-    pin_thread_on_pwr "system_server" "\.bg"
+    change_thread_rt "system_server" "input" "1"
+
+    # apply prefer idle to systemui
+    change_task_cgroup "com.android.systemui" "top-app" "stune"
+
+    # boost app boot process, zygote--com.xxxx.xxx
+    unpin_proc "zygote"
+    pin_proc_on_perf "zygote"
 
     # let binders of surfaceflinger run with top-app
     pin_proc_on_pwr "surfaceflinger"
-    change_thread_rt "surfaceflinger" "surfaceflinger" "4"
     unpin_thread "surfaceflinger" "Binder"
 }
 

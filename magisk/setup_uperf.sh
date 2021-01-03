@@ -167,7 +167,6 @@ _get_sdm660_type()
     else
         echo "$(_get_sdm636_type)"
     fi
-
 }
 
 _get_sdm626_type()
@@ -248,6 +247,28 @@ _get_e8895_type()
     fi
 }
 
+_get_mt6873_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 4)"
+    if [ "$b_max" -gt 2500000 ]; then
+        echo "mt6875"
+    else
+        echo "mt6873"
+    fi
+}
+
+_get_mt6885_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 4)"
+    if [ "$b_max" -gt 2500000 ]; then
+        echo "mt6889"
+    else
+        echo "mt6885"
+    fi
+}
+
 # $1:cfg_name
 _setup_platform_file()
 {
@@ -289,10 +310,11 @@ _get_cfgname()
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="e8890" ;;
     "universal7420") ret="e7420" ;;
-    "mt6873")        ret="mt6873" ;;
-    "mt6875")        ret="mt6875" ;;
-    "mt6885")        ret="mt6885" ;;
-    "mt6889")        ret="mt6889" ;;
+    "mt6785")        ret="mt6785" ;;
+    "mt6873")        ret="$(_get_mt6873_type)" ;;
+    "mt6875")        ret="$(_get_mt6873_type)" ;;
+    "mt6885")        ret="$(_get_mt6885_type)" ;;
+    "mt6889")        ret="$(_get_mt6885_type)" ;;
     *)               ret="unsupported" ;;
     esac
     echo "$ret"
@@ -303,7 +325,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (20210102)"
+    echo "* Version: v2 (21.01.03)"
     echo ""
 }
 

@@ -1,2 +1,0 @@
-on post-fs-data
-    mkdir /data/vendor/powerhal 0775 system system
