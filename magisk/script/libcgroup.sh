@@ -116,6 +116,23 @@ change_thread_rt()
 }
 
 # $1:task_name $2:thread_name
+change_thread_high_prio()
+{
+    local ps_ret
+    local comm
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
+            if [ "$(echo $comm | grep -i "$2")" != "" ]; then
+                log "change $1/$comm($temp_tid) -> Nice -20"
+                renice -n -20 -p "$temp_tid" >> $LOG_FILE
+            fi
+        done
+    done
+}
+
+# $1:task_name $2:thread_name
 pin_thread_on_pwr()
 {
     change_thread_cgroup "$1" "$2" "background" "cpuset"

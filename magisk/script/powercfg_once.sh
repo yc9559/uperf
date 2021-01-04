@@ -56,8 +56,9 @@ unify_cgroup()
     pin_thread_on_perf "system_server" "Binder"
     pin_thread_on_perf "system_server" "android\.anim"
     pin_thread_on_perf "system_server" "android\.ui"
-    # ...set UX pipeline related thread to RT policy
-    change_thread_rt "system_server" "input" "1"
+    # ...set UX pipeline related thread high priority
+    change_thread_high_prio "system_server" "input"
+    change_thread_high_prio "system_server" "android\.anim"
 
     # apply prefer idle to systemui
     change_task_cgroup "com.android.systemui" "top-app" "stune"
@@ -106,7 +107,7 @@ unify_cpufreq()
     set_governor_param "interactive/timer_slack" "0:12345678 2:12345678 4:12345678"
 }
 
-unify_adreno()
+unify_gpufreq()
 {
     # save ~100mw under light 3D workload
     lock_val "0" $KSGL/force_no_nap
@@ -114,6 +115,10 @@ unify_adreno()
     lock_val "0" $KSGL/force_bus_on
     lock_val "0" $KSGL/force_clk_on
     lock_val "0" $KSGL/force_rail_on
+
+    # unlock mtk gpu strict limit
+    lock_val "1" /sys/module/ged/parameters/gpu_dvfs
+    lock_val "1" /sys/module/ged/parameters/gx_game_mode
 }
 
 unify_sched()
@@ -206,7 +211,7 @@ disable_kernel_boost()
     lock_val "3 0" /proc/ppm/policy_status
     lock_val "4 1" /proc/ppm/policy_status
     lock_val "5 0" /proc/ppm/policy_status
-    lock_val "6 0" /proc/ppm/policy_status
+    lock_val "6 1" /proc/ppm/policy_status # used by uperf
     lock_val "7 0" /proc/ppm/policy_status
     lock_val "8 0" /proc/ppm/policy_status
     lock_val "9 0" /proc/ppm/policy_status
@@ -293,7 +298,7 @@ disable_userspace_boost
 disable_kernel_boost
 disable_hotplug
 unify_cpufreq
-unify_adreno
+unify_gpufreq
 unify_sched
 unify_lpm
 
