@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+/* Copyright (c) 2017-2019 Qualcomm Technologies, Inc.
+ * All Rights Reserved.
+ * Confidential and Proprietary - Qualcomm Technologies, Inc.
+ */
+-->
+
+<BoostConfigs>
+    <PerfBoost>
+
+<!--placeholder for powercfg-->
+
+    </PerfBoost>
+</BoostConfigs>

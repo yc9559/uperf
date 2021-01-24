@@ -2,7 +2,7 @@
 # Cgroup Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20201230
+# Version: 20210110
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -98,7 +98,21 @@ change_task_nice()
     done
 }
 
-# $1:task_name $2:thread_name $3:priority(100-x, 2-99)
+# $1:task_name $2:priority(99-x, 1<=x<=99)
+change_task_rt()
+{
+    local ps_ret
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
+            log "change $1/$comm($temp_tid) -> RT policy"
+            chrt -f -p "$2" "$temp_tid" >> $LOG_FILE
+        done
+    done
+}
+
+# $1:task_name $2:thread_name $3:priority(99-x, 1<=x<=99)
 change_thread_rt()
 {
     local ps_ret
@@ -111,6 +125,20 @@ change_thread_rt()
                 log "change $1/$comm($temp_tid) -> RT policy"
                 chrt -f -p "$3" "$temp_tid" >> $LOG_FILE
             fi
+        done
+    done
+}
+
+# $1:task_name
+change_task_high_prio()
+{
+    local ps_ret
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
+            log "change $1/$comm($temp_tid) -> Nice -20"
+            renice -n -20 -p "$temp_tid" >> $LOG_FILE
         done
     done
 }

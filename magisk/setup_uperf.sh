@@ -285,6 +285,8 @@ _get_cfgname()
 {
     local ret
     case "$1" in
+    "lahaina")       ret="sdm888" ;;
+    "shima")         ret="sdm775" ;;
     "kona")          ret="$(_get_sdm865_type)" ;;
     "msmnile")       ret="sdm855" ;;
     "sdm845")        ret="sdm845" ;;
@@ -325,7 +327,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.01.04)"
+    echo "* Version: v2 (21.01.24)"
     echo ""
 }
 

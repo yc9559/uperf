@@ -12,64 +12,99 @@ BASEDIR="$(dirname "$0")"
 
 unify_cgroup()
 {
+    # clear stune
+    mutate "0" /dev/stune/background/schedtune.sched_boost_no_override
     mutate "0" /dev/stune/background/schedtune.boost
     mutate "0" /dev/stune/background/schedtune.prefer_idle
+    mutate "0" /dev/stune/foreground/schedtune.sched_boost_no_override
     mutate "0" /dev/stune/foreground/schedtune.boost
     mutate "0" /dev/stune/foreground/schedtune.prefer_idle
+    mutate "1" /dev/stune/top-app/schedtune.sched_boost_no_override
     mutate "0" /dev/stune/top-app/schedtune.boost
     mutate "0" /dev/stune/top-app/schedtune.prefer_idle
-    mutate "100" /dev/stune/rt/schedtune.boost
-    mutate "1" /dev/stune/rt/schedtune.prefer_idle
 
-    mutate "0-2,6" /dev/cpuset/foreground/cpus
+    # clear uclamp
+    mutate "0" /dev/cpuctl/background/cpu.uclamp.sched_boost_no_override
+    mutate "0" /dev/cpuctl/background/cpu.uclamp.min
+    mutate "0" /dev/cpuctl/background/cpu.uclamp.latency_sensitive
+    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.sched_boost_no_override
+    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.min
+    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.latency_sensitive
+    mutate "1" /dev/cpuctl/top-app/cpu.uclamp.sched_boost_no_override
+    mutate "0" /dev/cpuctl/top-app/cpu.uclamp.min
+    mutate "0" /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive
+
+    # launcher&home usually in foreground cpuset group
+    mutate "4-6" /dev/cpuset/foreground/boost/cpus
+    mutate "0-2,4-6" /dev/cpuset/foreground/cpus
     mutate "0-3" /dev/cpuset/background/cpus
 
-    # fix laggy bilibili feed scrolling
-    change_task_cgroup "servicemanager" "top-app" "cpuset"
-    change_task_cgroup "servicemanager" "foreground" "stune"
-    change_task_cgroup "android\.phone" "top-app" "cpuset"
-    change_task_cgroup "android\.phone" "foreground" "stune"
-
-    # provide best performance for fingerprint service
-    change_task_cgroup "\.hardware\.biometrics\.fingerprint" "rt" "stune"
-    change_task_nice "\.hardware\.biometrics\.fingerprint" "-20"
-
-    # reduce big cluster wakeup
+    # Reduce Perf Cluster Wakeup
+    # daemons
+    pin_proc_on_pwr "\[rcu"
     pin_proc_on_pwr "crtc_commit"
     pin_proc_on_pwr "crtc_event"
     pin_proc_on_pwr "ueventd"
     pin_proc_on_pwr "netd"
-    # eg. android.hardware.sensors@1.0-service
+    pin_proc_on_pwr "mdnsd"
+    pin_proc_on_pwr "pdnsd"
+    pin_proc_on_pwr "qcrild"
+    pin_proc_on_pwr "magiskd"
+    pin_proc_on_pwr "daemon"
+    pin_proc_on_pwr "analytics"
+    # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "\.hardware\."
-    # ...but exclude fingerprint&camera&display service for speed
-    unpin_proc "\.hardware\.biometrics\.fingerprint"
-    unpin_proc "\.hardware\.camera\.provider"
-    unpin_proc "\.hardware\.display\."
+    # save bandwidth for UI
+    pin_proc_on_pwr "system_server"
+    # pwr cluster has enough capacity for surfaceflinger
+    pin_proc_on_pwr "surfaceflinger"
+    # MediaProvider is background service
+    pin_proc_on_pwr "com.android.providers.media.module"
+    pin_proc_on_pwr "android.process.media"
 
-    # pin system_server in background to save bandwidth for UI
-    change_task_cgroup "system_server" "background" "cpuset"
-    change_task_cgroup "system_server" "top-app" "stune"
-    # ...but exclude Binders and animations
-    unpin_thread "system_server" "Binder"
+    # Render Pipeline
+    # input dispatcher
+    change_thread_high_prio "system_server" "input"
+    # transition animation
     unpin_thread "system_server" "android\.anim"
     unpin_thread "system_server" "android\.ui"
-    pin_thread_on_perf "system_server" "Binder"
+    unpin_thread "system_server" "android\.display"
     pin_thread_on_perf "system_server" "android\.anim"
     pin_thread_on_perf "system_server" "android\.ui"
-    # ...set UX pipeline related thread high priority
-    change_thread_high_prio "system_server" "input"
-    change_thread_high_prio "system_server" "android\.anim"
+    pin_thread_on_perf "system_server" "android\.display"
+    change_thread_rt "system_server" "android\.anim" "1"
+    change_thread_rt "system_server" "android\.ui" "1"
+    change_thread_rt "system_server" "android\.display" "1"
+    # speed up searching service binder
+    change_task_cgroup "servicemanag" "top-app" "cpuset"
+    # prevent display service from being preempted by normal tasks
+    change_task_rt "\.hardware\.display" "2"
+    change_task_rt "\.composer" "2"
+    # kworkers may block binders
+    change_task_high_prio "\[rcu"
+    change_task_high_prio "\[kworker\/"
+    change_task_high_prio "\[ksoftirqd\/"
+    # fix laggy bilibili feed scrolling
+    change_task_cgroup "android\.phone" "foreground" "cpuset"
+    change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
+    # let UX related Binders run with top-app
+    change_thread_cgroup "surfaceflinger" "surfaceflinger" "top-app" "cpuset"
+    change_thread_cgroup "surfaceflinger" "Binder" "top-app" "cpuset"
+    change_thread_cgroup "\.composer" "Binder" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "Binder" "top-app" "cpuset"
 
-    # apply prefer idle to systemui
-    change_task_cgroup "com.android.systemui" "top-app" "stune"
-
+    # Latency Sensitive Scene Boost
+    # camera service
+    unpin_proc "\.hardware\.camera\.provider"
+    # provide best performance for fingerprint service
+    unpin_proc "\.hardware\.biometrics\.fingerprint"
+    change_task_high_prio "\.hardware\.biometrics\.fingerprint"
+    # mfp-daemon: goodix in-screen fingerprint daemon
+    unpin_proc "mfp"
+    change_task_high_prio "mfp"
     # boost app boot process, zygote--com.xxxx.xxx
     unpin_proc "zygote"
-    pin_proc_on_perf "zygote"
-
-    # let binders of surfaceflinger run with top-app
-    pin_proc_on_pwr "surfaceflinger"
-    unpin_thread "surfaceflinger" "Binder"
+    change_task_high_prio "zygote"
 }
 
 unify_cpufreq()
@@ -88,13 +123,10 @@ unify_cpufreq()
         set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
     fi
 
-    # more conservative governor
-    set_governor_param "schedutil/hispeed_load" "0:99 2:99 4:99 6:99 7:99"
-    set_governor_param "schedutil/hispeed_freq" "0:1500000 2:1500000 4:1500000 6:1500000 7:1500000"
-    set_governor_param "schedutil/pl" "0:0 2:0 4:0 6:0 7:0"
-    # ...but prefer longer idle time in light loads
-    set_governor_param "schedutil/hispeed_load" "0:80"
-    set_governor_param "schedutil/hispeed_freq" "0:1000000"
+    # unify walt schedutil governor
+    set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
+    set_governor_param "schedutil/hispeed_load" "0:100 2:100 4:100 6:100 7:100"
+    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1 0:0"
 
     # unify hmp interactive governor, only 2+2 4+2 4+4
     set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
@@ -119,6 +151,9 @@ unify_gpufreq()
     # unlock mtk gpu strict limit
     lock_val "1" /sys/module/ged/parameters/gpu_dvfs
     lock_val "1" /sys/module/ged/parameters/gx_game_mode
+    lock_val "0" /sys/module/ged/parameters/gx_3d_benchmark_on
+    lock_val "1" /proc/mali/dvfs_enable
+    lock_val "0" /proc/gpufreq/gpufreq_opp_freq
 }
 
 unify_sched()
@@ -128,6 +163,7 @@ unify_sched()
     lock_val "0" $SCHED/sched_walt_rotate_big_tasks
     lock_val "1000" $SCHED/sched_min_task_util_for_boost
     lock_val "1000" $SCHED/sched_min_task_util_for_colocation
+    lock_val "0" $SCHED/sched_conservative_pl
 
     # scheduler boost for top app main from msm kernel 4.19
     lock_val "0" $SCHED/sched_boost_top_app
@@ -185,9 +221,9 @@ disable_hotplug()
 disable_kernel_boost()
 {
     # Qualcomm
-    lock_val "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0" $CPU_BOOST/input_boost_freq
-    lock_val "0" $CPU_BOOST/input_boost_ms
-    lock_val "0" $CPU_BOOST/sched_boost_on_input
+    lock_val "0" /sys/devices/system/cpu/cpu_boost/parameters/input_boost_ms
+    lock_val "0" /sys/devices/system/cpu/cpu_boost/input_boost_ms
+    lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms
     lock_val "0" /sys/module/msm_performance/parameters/touchboost
     lock_val "0" /sys/module/cpu_boost/parameters/boost_ms
 
@@ -205,11 +241,12 @@ disable_kernel_boost()
     # [9] PPM_POLICY_SYS_BOOST: disabled
     # [10] PPM_POLICY_HICA: ?
     # Usage: echo <policy_idx> <1(enable)/0(disable)> > /proc/ppm/policy_status
+    lock_val "1" /proc/ppm/enabled
     lock_val "0 0" /proc/ppm/policy_status
     lock_val "1 0" /proc/ppm/policy_status
     lock_val "2 0" /proc/ppm/policy_status
     lock_val "3 0" /proc/ppm/policy_status
-    lock_val "4 1" /proc/ppm/policy_status
+    lock_val "4 0" /proc/ppm/policy_status
     lock_val "5 0" /proc/ppm/policy_status
     lock_val "6 1" /proc/ppm/policy_status # used by uperf
     lock_val "7 0" /proc/ppm/policy_status

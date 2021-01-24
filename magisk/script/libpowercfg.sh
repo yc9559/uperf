@@ -2,7 +2,7 @@
 # Powercfg Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210103
+# Version: 20210120
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -145,36 +145,22 @@ perfhal_mode="balance"
 # stop before updating cfg
 perfhal_stop()
 {
-    stop perf-hal-1-0
-    stop perf-hal-1-1
-    stop perf-hal-1-2
-    stop perf-hal-1-3
-    stop perf-hal-2-0
-    stop perf-hal-2-1
-    stop perf-hal-2-2
-    stop perf-hal-2-3
-    stop perf-hal-3-0
-    stop perf-hal-3-1
-    stop perf-hal-3-2
-    stop perf-hal-3-3
+    for i in 0 1 2 3 4; do
+        for j in 0 1 2 3 4; do
+            stop "perf-hal-$i-$j"
+        done
+    done
     usleep 500
 }
 
 # start after updating cfg
 perfhal_start()
 {
-    start perf-hal-1-0
-    start perf-hal-1-1
-    start perf-hal-1-2
-    start perf-hal-1-3
-    start perf-hal-2-0
-    start perf-hal-2-1
-    start perf-hal-2-2
-    start perf-hal-2-3
-    start perf-hal-3-0
-    start perf-hal-3-1
-    start perf-hal-3-2
-    start perf-hal-3-3
+    for i in 0 1 2 3 4; do
+        for j in 0 1 2 3 4; do
+            start "perf-hal-$i-$j"
+        done
+    done
 }
 
 # $1:mode(such as balance)

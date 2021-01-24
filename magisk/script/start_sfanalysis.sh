@@ -2,7 +2,7 @@
 # Surfaceflinger Analysis Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200516
+# Version: 20210113
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -47,6 +47,9 @@ sfa_start()
         echo "Retry after setting SELinux to permissive." >> "$SFA_LOG"
         "$MODULE_PATH/$SFA_REL/$SFA_NAME" "/system/bin/surfaceflinger" "$lib_path" >> "$SFA_LOG"
     fi
+
+    sleep 1
+    logcat -d | grep -i "SfAnalysis" >>  "$SFA_LOG"
 }
 
 [ -f "$MODULE_PATH/enable_sfanalysis" ] && sfa_start
