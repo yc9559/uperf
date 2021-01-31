@@ -13,31 +13,31 @@ BASEDIR="$(dirname "$0")"
 unify_cgroup()
 {
     # clear stune
-    mutate "0" /dev/stune/background/schedtune.sched_boost_no_override
-    mutate "0" /dev/stune/background/schedtune.boost
-    mutate "0" /dev/stune/background/schedtune.prefer_idle
-    mutate "0" /dev/stune/foreground/schedtune.sched_boost_no_override
-    mutate "0" /dev/stune/foreground/schedtune.boost
-    mutate "0" /dev/stune/foreground/schedtune.prefer_idle
-    mutate "1" /dev/stune/top-app/schedtune.sched_boost_no_override
-    mutate "0" /dev/stune/top-app/schedtune.boost
-    mutate "0" /dev/stune/top-app/schedtune.prefer_idle
+    lock_val "0" /dev/stune/background/schedtune.sched_boost_no_override
+    lock_val "0" /dev/stune/background/schedtune.boost
+    lock_val "0" /dev/stune/background/schedtune.prefer_idle
+    lock_val "0" /dev/stune/foreground/schedtune.sched_boost_no_override
+    lock_val "0" /dev/stune/foreground/schedtune.boost
+    lock_val "0" /dev/stune/foreground/schedtune.prefer_idle
+    lock_val "1" /dev/stune/top-app/schedtune.sched_boost_no_override
+    lock_val "0" /dev/stune/top-app/schedtune.boost
+    lock_val "0" /dev/stune/top-app/schedtune.prefer_idle
 
     # clear uclamp
-    mutate "0" /dev/cpuctl/background/cpu.uclamp.sched_boost_no_override
-    mutate "0" /dev/cpuctl/background/cpu.uclamp.min
-    mutate "0" /dev/cpuctl/background/cpu.uclamp.latency_sensitive
-    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.sched_boost_no_override
-    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.min
-    mutate "0" /dev/cpuctl/foreground/cpu.uclamp.latency_sensitive
-    mutate "1" /dev/cpuctl/top-app/cpu.uclamp.sched_boost_no_override
-    mutate "0" /dev/cpuctl/top-app/cpu.uclamp.min
-    mutate "0" /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive
+    lock_val "0" /dev/cpuctl/background/cpu.uclamp.sched_boost_no_override
+    lock_val "0" /dev/cpuctl/background/cpu.uclamp.min
+    lock_val "0" /dev/cpuctl/background/cpu.uclamp.latency_sensitive
+    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.sched_boost_no_override
+    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.min
+    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.latency_sensitive
+    lock_val "1" /dev/cpuctl/top-app/cpu.uclamp.sched_boost_no_override
+    lock_val "0" /dev/cpuctl/top-app/cpu.uclamp.min
+    lock_val "0" /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive
 
-    # launcher&home usually in foreground cpuset group
-    mutate "4-6" /dev/cpuset/foreground/boost/cpus
-    mutate "0-2,4-6" /dev/cpuset/foreground/cpus
-    mutate "0-3" /dev/cpuset/background/cpus
+    # VMOS may set cpuset/background/cpus to "0"
+    lock_val "$CPUID_MID" /dev/cpuset/foreground/boost/cpus
+    lock_val "$CPUID_MID" /dev/cpuset/foreground/cpus
+    lock_val "$CPUID_LOW" /dev/cpuset/background/cpus
 
     # Reduce Perf Cluster Wakeup
     # daemons
@@ -55,31 +55,56 @@ unify_cgroup()
     # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "\.hardware\."
     # save bandwidth for UI
-    pin_proc_on_pwr "system_server"
+    pin_proc_on_mid "system_server"
     # pwr cluster has enough capacity for surfaceflinger
     pin_proc_on_pwr "surfaceflinger"
     # MediaProvider is background service
-    pin_proc_on_pwr "com.android.providers.media.module"
-    pin_proc_on_pwr "android.process.media"
+    pin_proc_on_pwr "com\.android\.providers\.media"
+    pin_proc_on_pwr "android\.process.media"
+    # com.miui.securitycenter & com.miui.securityadd
+    pin_proc_on_pwr "miui\.security"
 
-    # Render Pipeline
+    # system_server blacklist
+    pin_proc_on_mid "system_server"
     # input dispatcher
     change_thread_high_prio "system_server" "input"
     # transition animation
-    unpin_thread "system_server" "android\.anim"
-    unpin_thread "system_server" "android\.ui"
-    unpin_thread "system_server" "android\.display"
     pin_thread_on_perf "system_server" "android\.anim"
     pin_thread_on_perf "system_server" "android\.ui"
     pin_thread_on_perf "system_server" "android\.display"
     change_thread_rt "system_server" "android\.anim" "1"
     change_thread_rt "system_server" "android\.ui" "1"
     change_thread_rt "system_server" "android\.display" "1"
+    # not important
+    pin_thread_on_ulv "system_server" "Async"
+    pin_thread_on_ulv "system_server" "backup"
+    pin_thread_on_ulv "system_server" "Greezer"
+    pin_thread_on_ulv "system_server" "TaskSnapshot"
+    pin_thread_on_ulv "system_server" "Oom"
+    pin_thread_on_ulv "system_server" "Sync"
+    pin_thread_on_ulv "system_server" "\.bg"
+    pin_thread_on_ulv "system_server" "Miui"
+    pin_thread_on_ulv "system_server" "Observer"
+    pin_thread_on_ulv "system_server" "Connect"
+    pin_thread_on_ulv "system_server" "Network"
+    pin_thread_on_ulv "system_server" "Power"
+    pin_thread_on_ulv "system_server" "Sensor"
+    pin_thread_on_ulv "system_server" "Wifi"
+    pin_thread_on_ulv "system_server" "Thread-"
+    pin_thread_on_ulv "system_server" "pool-"
+    # do not let GC thread block system_server
+    # pin_thread_on_mid "system_server" "HeapTaskDaemon"
+    # pin_thread_on_mid "system_server" "FinalizerDaemon"
+
+    # Render Pipeline
     # speed up searching service binder
     change_task_cgroup "servicemanag" "top-app" "cpuset"
     # prevent display service from being preempted by normal tasks
     change_task_rt "\.hardware\.display" "2"
     change_task_rt "\.composer" "2"
+    # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
+    # perf will automatically set self to prio=100
+    unpin_proc "\.hardware\.perf"
     # kworkers may block binders
     change_task_high_prio "\[rcu"
     change_task_high_prio "\[kworker\/"
@@ -90,10 +115,11 @@ unify_cgroup()
     # let UX related Binders run with top-app
     change_thread_cgroup "surfaceflinger" "surfaceflinger" "top-app" "cpuset"
     change_thread_cgroup "surfaceflinger" "Binder" "top-app" "cpuset"
+    change_thread_cgroup "\.hardware\.display" "Binder" "top-app" "cpuset"
     change_thread_cgroup "\.composer" "Binder" "top-app" "cpuset"
     change_thread_cgroup "system_server" "Binder" "top-app" "cpuset"
 
-    # Latency Sensitive Scene Boost
+    # Heavy Scene Boost
     # camera service
     unpin_proc "\.hardware\.camera\.provider"
     # provide best performance for fingerprint service
@@ -126,7 +152,7 @@ unify_cpufreq()
     # unify walt schedutil governor
     set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
     set_governor_param "schedutil/hispeed_load" "0:100 2:100 4:100 6:100 7:100"
-    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1 0:0"
+    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
 
     # unify hmp interactive governor, only 2+2 4+2 4+4
     set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
@@ -164,6 +190,7 @@ unify_sched()
     lock_val "1000" $SCHED/sched_min_task_util_for_boost
     lock_val "1000" $SCHED/sched_min_task_util_for_colocation
     lock_val "0" $SCHED/sched_conservative_pl
+    lock_val "0" $SCHED/sched_force_lb_enable
 
     # scheduler boost for top app main from msm kernel 4.19
     lock_val "0" $SCHED/sched_boost_top_app
@@ -180,11 +207,12 @@ unify_sched()
     # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the migrate thresholds need compensate.
-    set_sched_migrate "99" "40" "999" "888"
-    set_sched_migrate "99 99" "40 40" "999" "888"
+    set_sched_migrate "80" "20" "999" "888"
+    set_sched_migrate "80 80" "20 40" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
-    lock_val "10000000" $SCHED/sched_migration_cost_ns
+    # system_server binders maybe pinned on perf cluster due to this
+    # lock_val "10000000" $SCHED/sched_migration_cost_ns
 }
 
 unify_lpm()
@@ -317,11 +345,13 @@ disable_kernel_boost()
 disable_userspace_boost()
 {
     # Qualcomm perfd
-    stop perfd
+    stop perfd 2> /dev/null
     # Qualcomm perfhal
+    # running with empty config file
     perfhal_stop
+    perfhal_start
     # brain service maybe not smart
-    stop oneplus_brain_service
+    stop oneplus_brain_service 2> /dev/null
     # disable service below will BOOM
     # stop vendor.power.stats-hal-1-0
     # stop vendor.power-hal-1-0

@@ -2,11 +2,24 @@
 # Cgroup Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210110
+# Version: 202101230
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
 . $BASEDIR/libcommon.sh
+
+# launcher&home usually in foreground cpuset group
+# reserve one LITTLE for hwservicemanager which will block composer
+# thread priority settings not working on hwservicemanager
+# okay, disabling perf-hal resulting hwservicemanager frequently wakeup
+CPUMASK_ULV="03"
+CPUMASK_LOW="0f"
+CPUMASK_MID="63"
+CPUMASK_HIGH="f0"
+CPUID_ULV="0-1"
+CPUID_LOW="0-3"
+CPUID_MID="0-1,5-6"
+CPUID_HIGH="4-7"
 
 # avoid matching grep itself
 # ps -Ao pid,args | grep kswapd
@@ -161,21 +174,49 @@ change_thread_high_prio()
 }
 
 # $1:task_name $2:thread_name
+unpin_thread()
+{
+    change_thread_cgroup "$1" "$2" "" "cpuset"
+}
+
+# $1:task_name $2:thread_name
+pin_thread_on_ulv()
+{
+    change_thread_cgroup "$1" "$2" "background" "cpuset"
+    change_thread_affinity "$1" "$2" "$CPUMASK_ULV"
+}
+
+# $1:task_name $2:thread_name
 pin_thread_on_pwr()
 {
     change_thread_cgroup "$1" "$2" "background" "cpuset"
 }
 
 # $1:task_name $2:thread_name
-pin_thread_on_perf()
+pin_thread_on_mid()
 {
-    change_thread_affinity "$1" "$2" "f0"
+    unpin_thread "$1" "$2"
+    change_thread_affinity "$1" "$2" "$CPUMASK_MID"
 }
 
 # $1:task_name $2:thread_name
-unpin_thread()
+pin_thread_on_perf()
 {
-    change_thread_cgroup "$1" "$2" "" "cpuset"
+    unpin_thread "$1" "$2"
+    change_thread_affinity "$1" "$2" "$CPUMASK_HIGH"
+}
+
+# $1:task_name
+unpin_proc()
+{
+    change_task_cgroup "$1" "" "cpuset"
+}
+
+# $1:task_name
+pin_proc_on_ulv()
+{
+    change_task_cgroup "$1" "background" "cpuset"
+    change_task_affinity "$1" "$CPUMASK_ULV"
 }
 
 # $1:task_name
@@ -185,13 +226,15 @@ pin_proc_on_pwr()
 }
 
 # $1:task_name
-pin_proc_on_perf()
+pin_proc_on_mid()
 {
-    change_task_affinity "$1" "f0"
+    unpin_proc "$1"
+    change_task_affinity "$1" "$CPUMASK_MID"
 }
 
 # $1:task_name
-unpin_proc()
+pin_proc_on_perf()
 {
-    change_task_cgroup "$1" "" "cpuset"
+    unpin_proc "$1"
+    change_task_affinity "$1" "$CPUMASK_HIGH"
 }

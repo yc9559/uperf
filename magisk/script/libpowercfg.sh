@@ -2,7 +2,7 @@
 # Powercfg Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210120
+# Version: 20210124
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -147,7 +147,7 @@ perfhal_stop()
 {
     for i in 0 1 2 3 4; do
         for j in 0 1 2 3 4; do
-            stop "perf-hal-$i-$j"
+            stop "perf-hal-$i-$j" 2> /dev/null
         done
     done
     usleep 500
@@ -158,7 +158,7 @@ perfhal_start()
 {
     for i in 0 1 2 3 4; do
         for j in 0 1 2 3 4; do
-            start "perf-hal-$i-$j"
+            start "perf-hal-$i-$j" 2> /dev/null
         done
     done
 }

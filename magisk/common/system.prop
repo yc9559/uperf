@@ -4,32 +4,10 @@
 
 # unify surfaceflinger props
 debug.sf.latch_unsignaled=1
-ro.surface_flinger.max_frame_buffer_acquired_buffers=4
-# app phase
-# ro.surface_flinger.vsync_event_phase_offset_ns=1000000
-# early app phase
-# debug.sf.early_app_phase_offset_ns=1000000
-# GL early app phase
-# debug.sf.early_gl_app_phase_offset_ns=1000000
-# SF phase
-# ro.surface_flinger.vsync_sf_event_phase_offset_ns=-4000000
-# early SF phase
-# debug.sf.early_phase_offset_ns=-4000000
-# GL early SF phase
-# debug.sf.early_gl_phase_offset_ns=-4000000
-# early SF phase(90Hz+)
-# debug.sf.high_fps_early_phase_offset_ns=-4000000
-# GL early SF phase(90Hz+)
-# debug.sf.high_fps_early_gl_phase_offset_ns=-4000000
-# Below defines the threshold when an offset is considered to be negative, i.e. targeting
-# for the N+2 vsync instead of N+1. This means that:
-# For offset < threshold, SF wake up (vsync_duration - offset) before HW vsync.
-# For offset >= threshold, SF wake up (2 * vsync_duration - offset) before HW vsync.
-# debug.sf.phase_offset_threshold_for_next_vsync_ns=6100000
 # used by the Scheduler to trigger inactivity callbacks that will switch the display to a lower refresh rate
-ro.surface_flinger.set_idle_timer_ms=2000
+ro.surface_flinger.set_idle_timer_ms=1000
 
 # HeapTaskDaemon is controlled by uperf, reserve more room for direct heap reclaim
 # default = 512k/8m
-dalvik.vm.heapminfree=2m
-dalvik.vm.heapmaxfree=10m
+dalvik.vm.heapminfree=4m
+dalvik.vm.heapmaxfree=12m

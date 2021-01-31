@@ -113,8 +113,10 @@ _get_sdm76x_type()
 {
     if [ "$(_get_maxfreq 7)" -gt 2800000 ]; then
         echo "sdm768"
-    else
+    elif [ "$(_get_maxfreq 7)" -gt 2300000 ]; then
         echo "sdm765"
+    else
+        echo "sdm750"
     fi
 }
 
@@ -247,14 +249,25 @@ _get_e8895_type()
     fi
 }
 
+_get_mt6853_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 6)"
+    if [ "$b_max" -gt 2200000 ]; then
+        echo "mtd800u"
+    else
+        echo "mtd720"
+    fi
+}
+
 _get_mt6873_type()
 {
     local b_max
     b_max="$(_get_maxfreq 4)"
     if [ "$b_max" -gt 2500000 ]; then
-        echo "mt6875"
+        echo "mtd820"
     else
-        echo "mt6873"
+        echo "mtd800"
     fi
 }
 
@@ -263,9 +276,9 @@ _get_mt6885_type()
     local b_max
     b_max="$(_get_maxfreq 4)"
     if [ "$b_max" -gt 2500000 ]; then
-        echo "mt6889"
+        echo "mtd1000"
     else
-        echo "mt6885"
+        echo "mtd1000l"
     fi
 }
 
@@ -312,7 +325,8 @@ _get_cfgname()
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="e8890" ;;
     "universal7420") ret="e7420" ;;
-    "mt6785")        ret="mt6785" ;;
+    "mt6785")        ret="mtg90t" ;;
+    "mt6853")        ret="$(_get_mt6853_type)" ;;
     "mt6873")        ret="$(_get_mt6873_type)" ;;
     "mt6875")        ret="$(_get_mt6873_type)" ;;
     "mt6885")        ret="$(_get_mt6885_type)" ;;
@@ -327,7 +341,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.01.24)"
+    echo "* Version: v2 (21.01.31)"
     echo ""
 }
 
