@@ -94,21 +94,6 @@ _get_sm6150_type()
     esac
 }
 
-_get_sdm865_type()
-{
-    local ddr_type4="07"
-	local ddr_type5="08"
-    local ddr_type
-    ddr_type="$(od -An -tx /proc/device-tree/memory/ddr_device_type)"
-    if [ ${ddr_type:4:2} == $ddr_type5 ]; then
-        echo "sdm865_lp5"
-    elif [ ${ddr_type:4:2} == $ddr_type4 ]; then
-        echo "sdm865_lp4x"
-    else
-        echo "sdm865_lp5"
-    fi
-}
-
 _get_sdm76x_type()
 {
     if [ "$(_get_maxfreq 7)" -gt 2800000 ]; then
@@ -300,7 +285,7 @@ _get_cfgname()
     case "$1" in
     "lahaina")       ret="sdm888" ;;
     "shima")         ret="sdm775" ;;
-    "kona")          ret="$(_get_sdm865_type)" ;;
+    "kona")          ret="sdm865" ;;
     "msmnile")       ret="sdm855" ;;
     "sdm845")        ret="sdm845" ;;
     "lito")          ret="$(_get_sdm76x_type)" ;;
@@ -341,7 +326,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.01.31)"
+    echo "* Version: v2 (21.02.14)"
     echo ""
 }
 
@@ -352,13 +337,15 @@ uperf_install()
 
     target="$(getprop ro.board.platform)"
     cfgname="$(_get_cfgname $target)"
+    echo "- ro.board.platform=$target"
     if [ "$cfgname" == "unsupported" ]; then
         target="$(getprop ro.product.board)"
         cfgname="$(_get_cfgname $target)"
+        echo "- ro.product.board=$target"
     fi
 
     if [ "$cfgname" != "unsupported" ]; then
-        echo "- The platform name is $target. Use $cfgname.json"
+        echo "- Use $cfgname.json"
         _setup_platform_file "$cfgname"
     else
         _abort "! [$target] not supported."
@@ -378,38 +365,45 @@ uperf_install()
     echo "- Uperf installation was successful."
 }
 
-sfa_install()
+injector_install()
 {
-    local sfanalysis_path
-    local target_lib_path
+    local src_path
+    local dst_path
     if [ "$(_is_aarch64)" == "true" ]; then
-        sfanalysis_path="$BASEDIR/sfanalysis/arm64-v8a"
-        target_lib_path="$BASEDIR/system/lib64"
+        src_path="$BASEDIR/injector/arm64-v8a"
+        dst_path="$BASEDIR/system/lib64"
     else
-        sfanalysis_path="$BASEDIR/sfanalysis/armeabi-v7a"
-        target_lib_path="$BASEDIR/system/lib"
+        src_path="$BASEDIR/injector/armeabi-v7a"
+        dst_path="$BASEDIR/system/lib"
     fi
 
-    mkdir -p "$target_lib_path"
-    cp "$sfanalysis_path/injector" "$BASEDIR/bin/"
-    cp "$sfanalysis_path/libsfanalysis.so" "$target_lib_path"
-
+    mkdir -p "$dst_path"
+    cp "$src_path/injector" "$BASEDIR/bin/"
+    cp "$src_path/libsfanalysis.so" "$dst_path"
+    cp "$src_path/libssanalysis.so" "$dst_path"
     _set_perm "$BASEDIR/bin/injector" 0 0 0755 u:object_r:system_file:s0
-    _set_perm "$target_lib_path/libsfanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
+    _set_perm "$dst_path/libsfanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
+    _set_perm "$dst_path/libssanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
+
     # in case of set_perm_recursive is broken
     chmod 0755 $BASEDIR/bin/*
 
-    # create sfanalysis enable flag
-    touch $BASEDIR/enable_sfanalysis
+    # create injector enable flag
+    touch $BASEDIR/enable_injector
 }
 
 powerhal_stub_install()
 {
     _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.cfg" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/perfboostsconfig.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
 }
 
 uperf_print_banner
 uperf_install
-sfa_install
+injector_install
 powerhal_stub_install
 exit 0

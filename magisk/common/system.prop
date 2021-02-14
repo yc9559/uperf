@@ -4,10 +4,3 @@
 
 # unify surfaceflinger props
 debug.sf.latch_unsignaled=1
-# used by the Scheduler to trigger inactivity callbacks that will switch the display to a lower refresh rate
-ro.surface_flinger.set_idle_timer_ms=1000
-
-# HeapTaskDaemon is controlled by uperf, reserve more room for direct heap reclaim
-# default = 512k/8m
-dalvik.vm.heapminfree=4m
-dalvik.vm.heapmaxfree=12m

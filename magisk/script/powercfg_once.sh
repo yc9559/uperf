@@ -69,29 +69,28 @@ unify_cgroup()
     # input dispatcher
     change_thread_high_prio "system_server" "input"
     # transition animation
-    pin_thread_on_perf "system_server" "android\.anim"
     pin_thread_on_perf "system_server" "android\.ui"
     pin_thread_on_perf "system_server" "android\.display"
-    change_thread_rt "system_server" "android\.anim" "1"
     change_thread_rt "system_server" "android\.ui" "1"
     change_thread_rt "system_server" "android\.display" "1"
     # not important
+    pin_thread_on_pwr "system_server" "Miui"
+    pin_thread_on_pwr "system_server" "Connect"
+    pin_thread_on_pwr "system_server" "Network"
     pin_thread_on_ulv "system_server" "Async"
     pin_thread_on_ulv "system_server" "backup"
     pin_thread_on_ulv "system_server" "Greezer"
     pin_thread_on_ulv "system_server" "TaskSnapshot"
     pin_thread_on_ulv "system_server" "Oom"
     pin_thread_on_ulv "system_server" "Sync"
-    pin_thread_on_ulv "system_server" "\.bg"
-    pin_thread_on_ulv "system_server" "Miui"
     pin_thread_on_ulv "system_server" "Observer"
-    pin_thread_on_ulv "system_server" "Connect"
-    pin_thread_on_ulv "system_server" "Network"
     pin_thread_on_ulv "system_server" "Power"
     pin_thread_on_ulv "system_server" "Sensor"
     pin_thread_on_ulv "system_server" "Wifi"
     pin_thread_on_ulv "system_server" "Thread-"
     pin_thread_on_ulv "system_server" "pool-"
+    pin_thread_on_ulv "system_server" "Jit thread pool"
+    # pin_thread_on_ulv "system_server" "\.bg" # it blocks binders
     # do not let GC thread block system_server
     # pin_thread_on_mid "system_server" "HeapTaskDaemon"
     # pin_thread_on_mid "system_server" "FinalizerDaemon"
@@ -112,12 +111,16 @@ unify_cgroup()
     # fix laggy bilibili feed scrolling
     change_task_cgroup "android\.phone" "foreground" "cpuset"
     change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
-    # let UX related Binders run with top-app
+    # sometimes surfaceflinger has quite high load
     change_thread_cgroup "surfaceflinger" "surfaceflinger" "top-app" "cpuset"
-    change_thread_cgroup "surfaceflinger" "Binder" "top-app" "cpuset"
-    change_thread_cgroup "\.hardware\.display" "Binder" "top-app" "cpuset"
-    change_thread_cgroup "\.composer" "Binder" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "Binder" "top-app" "cpuset"
+    pin_thread_on_mid "surfaceflinger" "app"
+    # let UX related Binders run with top-app
+    change_thread_cgroup "surfaceflinger" "^Binder" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "^Binder" "top-app" "cpuset"
+    change_thread_cgroup "\.hardware\.display" "^Binder" "top-app" "cpuset"
+    change_thread_cgroup "\.composer" "^Binder" "top-app" "cpuset"
+    # transition animation
+    change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuset"
 
     # Heavy Scene Boost
     # camera service
@@ -142,12 +145,9 @@ unify_cpufreq()
     # stop sched core_ctl, game's main thread need be pinned on prime core
     set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
 
-    # unify governor
-    if [ "$(is_eas)" == "true" ]; then
-        set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
-    else
-        set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
-    fi
+    # unify governor, use schedutil if kernel has it
+    set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
+    set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
 
     # unify walt schedutil governor
     set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
@@ -207,8 +207,8 @@ unify_sched()
     # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the migrate thresholds need compensate.
-    set_sched_migrate "80" "20" "999" "888"
-    set_sched_migrate "80 80" "20 40" "999" "888"
+    set_sched_migrate "50" "25" "999" "888"
+    set_sched_migrate "50 80" "25 40" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -270,27 +270,18 @@ disable_kernel_boost()
     # [10] PPM_POLICY_HICA: ?
     # Usage: echo <policy_idx> <1(enable)/0(disable)> > /proc/ppm/policy_status
     lock_val "1" /proc/ppm/enabled
-    lock_val "0 0" /proc/ppm/policy_status
-    lock_val "1 0" /proc/ppm/policy_status
-    lock_val "2 0" /proc/ppm/policy_status
-    lock_val "3 0" /proc/ppm/policy_status
-    lock_val "4 0" /proc/ppm/policy_status
-    lock_val "5 0" /proc/ppm/policy_status
-    lock_val "6 1" /proc/ppm/policy_status # used by uperf
-    lock_val "7 0" /proc/ppm/policy_status
-    lock_val "8 0" /proc/ppm/policy_status
-    lock_val "9 0" /proc/ppm/policy_status
-    lock_val "10 0" /proc/ppm/policy_status
+    # used by uperf
+    mutate "6 1" /proc/ppm/policy_status
 
     # Samsung
     mutate "0" /sys/class/input_booster/level
     mutate "0" /sys/class/input_booster/head
     mutate "0" /sys/class/input_booster/tail
 
-    # Samsung EPIC interfaces
-    mutate "0" /dev/cluster0_freq_min
-    mutate "0" /dev/cluster1_freq_min
-    mutate "0" /dev/cluster2_freq_min
+    # Samsung EPIC interfaces, used by uperf
+    # mutate "0" /dev/cluster0_freq_min
+    # mutate "0" /dev/cluster1_freq_min
+    # mutate "0" /dev/cluster2_freq_min
     # lock_val "0" /dev/bus_throughput
     # lock_val "0" /dev/gpu_freq_min
     # Samsung /kernel/sched/ems/...
@@ -347,9 +338,7 @@ disable_userspace_boost()
     # Qualcomm perfd
     stop perfd 2> /dev/null
     # Qualcomm perfhal
-    # running with empty config file
     perfhal_stop
-    perfhal_start
     # brain service maybe not smart
     stop oneplus_brain_service 2> /dev/null
     # disable service below will BOOM
@@ -360,7 +349,15 @@ disable_userspace_boost()
     # stop vendor.power-hal-1-3
 }
 
-clear_log
+enable_userspace_boost()
+{
+    # Qualcomm perfhal
+    # running with empty config file
+    perfhal_start
+}
+
+log "PATH=$PATH"
+log "sh=$(which sh)"
 disable_userspace_boost
 disable_kernel_boost
 disable_hotplug
@@ -368,6 +365,7 @@ unify_cpufreq
 unify_gpufreq
 unify_sched
 unify_lpm
+enable_userspace_boost
 
 # make sure that all the related cpu is online
 unify_cgroup

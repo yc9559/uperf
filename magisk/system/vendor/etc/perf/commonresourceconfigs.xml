@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+ * Copyright (c) 2017 Qualcomm Technologies, Inc.
+ * All Rights Reserved.
+ * Confidential and Proprietary - Qualcomm Technologies, Inc.
+-->
+
+<!-- Supported XML tags with their fields.
+ * Major tag supports OpcodeValue.
+ * Minor tag supports OpcodeValue, Nodepath and Supported(Optional) fields.
+ * By default, all the resources are assumed as supported.
+ Supported field can be used to mark a resource as not supported.
+ * All the interactive nodes, ondemand nodes and some nodes of sched major
+ group which aren't being used are marked as Not supported by default and
+ can be enabled by using the target specific config files. -->
+
+<!-- For resources which update multiple nodes or which require speical
+acquire/release funcitons, need to mention the keyword SPECIAL_NODE
+in their node path field and accordingly their ApplyOts and ResetOpts
+functions need to be defined in the code.-->
+
+<!-- For adding a new resource, a new minor tag with all mandatory fields
+need to be added just before the end of it's major group. -->
+
+<ResourceConfigs>
+    <PerfResources>
+
+    <!-- display off major start -->
+    <Major OpcodeValue="0x0" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+    <!-- display off major end -->
+
+    <!-- power collapse major start -->
+    <Major OpcodeValue="0x1" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+    <!-- power collapse major end -->
+
+    <!-- cpufreq major start -->
+    <Major OpcodeValue="0x2" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+    <!-- cpufreq major end -->
+
+    <!-- sched major start -->
+    <Major OpcodeValue="0x3" />
+        <!--Sysfsnode paths may change basing on the target for minors 0x1, 0x4, 0x5, 0x9.
+            So, for targets with different node paths than default, need to be specified
+            in the target specific resource config xml file. -->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xB" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xC" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xD" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xE" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xF" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x10" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x11" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x12" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x13" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x14" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x15" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x16" Node="SPECIAL_NODE - unsupported" />
+        <!-- sched_freq_aggr_threshold perflock will have contention with sched_boost level 3,
+        so disable this resource for the target which is going to use sched boost 3 level.-->
+        <Minor OpcodeValue="0x17" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x18" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x19" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1A" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1B" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1C" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1D" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1E" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1F" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x20" Node="SPECIAL_NODE - unsupported" /> <!-- sched_task_boost -->
+        <Minor OpcodeValue="0x21" Node="SPECIAL_NODE - unsupported" /> <!--sched_user_hint -->
+        <Minor OpcodeValue="0x22" Node="SPECIAL_NODE - unsupported" /> <!--sched_task_unfilter_nr_windows -->
+        <Minor OpcodeValue="0x23" Node="SPECIAL_NODE - unsupported" /> <!--sched_coloc_downmigrate_ns  -->
+        <Minor OpcodeValue="0x24" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x25" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x26" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x27" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x28" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x29" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2A" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2B" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2C" Node="SPECIAL_NODE - unsupported" /> <!-- enable sched_task_boost for top-app render thread-->
+        <Minor OpcodeValue="0x2D" Node="SPECIAL_NODE - unsupported" /> <!-- disable sched_task_boost for top-app render thread-->
+        <Minor OpcodeValue="0x2E" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2F" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x30" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x31" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x32" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x33" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x34" Node="SPECIAL_NODE - unsupported" />
+    <!-- sched major end -->
+
+    <!-- core hotplug major start -->
+    <Major OpcodeValue="0x4" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+    <!-- core hotplug major end-->
+
+    <!-- interactive major start -->
+    <Major OpcodeValue="0x5" />
+        <!-- For following minors node paths might change basing on GovInstanceType and
+        Supported field might change basing on the type of CpufreqGov.-->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xB" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xC" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xD" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xE" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xF" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x10" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x11" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x12" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x13" Node="SPECIAL_NODE - unsupported" />
+    <!-- interactive major end -->
+
+    <!-- cpubw hwmon major start -->
+    <Major OpcodeValue="0x6" />
+        <!-- ALl the following minors might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <!--Here onwards are the path for new opcodes to mark CPU_LLCC_BW nodes.Upper ones
+            of this major are marked as unsupported for the tergets using the new opcodes-->
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xB" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xC" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xD" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xE" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xF" Node="SPECIAL_NODE - unsupported" />
+    <!-- cpubw hwmon major end -->
+
+    <!-- video major start -->
+    <Major OpcodeValue="0x7" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+    <!-- video major end -->
+
+    <!-- ksm major start -->
+    <Major OpcodeValue="0x8" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+    <!-- ksm major end -->
+
+    <!-- ondemand major start -->
+    <Major OpcodeValue="0x9" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+    <!-- ondemand major end -->
+
+    <!-- gpu major start -->
+    <Major OpcodeValue="0xA" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+    <!-- gpu major end -->
+
+    <!-- misc major start -->
+    <Major OpcodeValue="0xB" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+    <!-- misc major end -->
+
+    <!-- llcbw hwmon major start -->
+    <Major OpcodeValue="0xC" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <!--Here onwards are the path for new opcodes to mark LLCC_DDR_BW nodes.Upper ones
+            of this major are marked as unsupported for the tergets using the new opcodes-->
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xB" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xC" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xD" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xE" Node="SPECIAL_NODE - unsupported" />
+
+    <!-- llcbw hwmon major end -->
+
+    <!-- memlat major start -->
+    <Major OpcodeValue="0xD" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x6" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x8" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x9" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xA" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xB" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xC" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xD" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xE" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0xF" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x10" Node="SPECIAL_NODE - unsupported" />
+    <!-- memlat major end -->
+
+    <!-- npu major start -->
+    <Major OpcodeValue="0xE" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - unsupported" />
+        <!--Here onwards are the path for new opcodes to mark NPU_LLCC_DDR_BW nodes.-->
+        <Minor OpcodeValue="0x3" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x4" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - unsupported" />
+    <!-- npu major end -->
+
+    </PerfResources>
+</ResourceConfigs>

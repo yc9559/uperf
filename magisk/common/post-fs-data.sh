@@ -12,12 +12,15 @@ vendor/etc/powerscntbl.cfg
 vendor/etc/powerscntbl.xml
 vendor/etc/perf/perfboostsconfig.json
 vendor/etc/perf/targetresourceconfigs.json
+vendor/etc/perf/commonresourceconfigs.json
 "
 for f in $perfcfgs; do
     [ ! -f "/$f" ] && rm "$MODDIR/system/$f"
 done
 
-# pin kworker on little
+# drivers/net/wireless/cnss2/main.c in kworker/u16:1 Tainted
+# because cnss: fatal: MHI power up returns timeout, which QMI timeout is 10000 ms 
+# kworker do not run on prime
 for f in $(find /sys/devices/virtual/workqueue "cpumask"); do
-    echo 0f > $f
+    echo 7f > $f
 done

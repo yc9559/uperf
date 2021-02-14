@@ -28,19 +28,19 @@ https://github.com/yc9559/uperf/releases
 ### Magisk方式
 
 1. 下载后通过Magisk Manager刷入，Magisk版本不低于18.0
-2. 重启后查看/sdcard/Android/log_uperf.txt检查uperf是否正常自启动
+2. 重启后查看`/sdcard/Android/log_uperf.txt`检查uperf是否正常自启动
 
 ### 手动安装
 
 1. 如果你的设备无法安装Magisk，并且已经获取到ROOT权限
 2. 下载后手动解压缩，例如解压缩到`/data/uperf`
 3. 修改`setup_uperf.sh`，`run_uperf.sh`，`initsvc_uperf.sh`权限为755
-4. 执行setup_uperf.sh完成安装，检查输出信息是否有报错
-5. 执行run_uperf.sh启动uperf，检查输出信息是否有报错
-6. 打开/cache/log_injector.log，检查sfanalysis注入是否成功
-7. 如果关联自启动到第三方APP，设置在开机完成后执行run_uperf.sh
+4. 执行`setup_uperf.sh`完成安装，检查输出信息是否有报错
+5. 执行`run_uperf.sh`启动uperf，检查输出信息是否有报错
+6. 打开`/data/cache/injector.log`，检查sfanalysis注入是否成功
+7. 如果关联自启动到第三方APP，设置在开机完成后执行`run_uperf.sh`
 8. 如果关联自启动到系统启动脚本，插入`sh /data/uperf/initsvc_uperf.sh`
-9. 重启后查看/sdcard/Android/log_uperf.txt检查uperf是否正常自启动
+9. 重启后查看`/sdcard/Android/log_uperf.txt`检查uperf是否正常自启动
 
 ### 性能模式切换
 
@@ -158,7 +158,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 
 ![检测到渲染延迟立即拉升CPU频率](./media/sflag.png)
 
-渲染提交滞后对应的Hint`SfLag`与重负载一样，有调用频率限制避免长时间拉升高频，相关参数暂时没有开放更改。`SfLag`使用可用次数缓冲池控制调用频率，每满400ms间隔可用次数+1，最大到20次。为了避免不必要的频率拉升，只允许从`Tap`、`Swipe`、`AndroidAM`转移到`SfLag`。使用监测ActivityManager的活动推测发生解锁屏幕这一方法存在少量漏检，因此在屏幕熄灭时收到渲染滞后通知也作为`AndroidAM`事件处理。SfAnalysis正常工作后在日志以如下方式体现：  
+渲染提交滞后对应的Hint`SfLag`与重负载一样，有调用频率限制避免长时间拉升高频，相关参数暂时没有开放更改。`SfLag`使用可用次数缓冲池控制调用频率，每满400ms间隔可用次数+1，最大到20次。为了避免不必要的频率拉升，只允许从`Tap`、`Swipe`、`AndroidAM`转移到`SfLag`。SfAnalysis正常工作后在日志以如下方式体现：  
 ```
 [13:03:36][I] SfAnalysis: Surfaceflinger analysis connected
 ```
@@ -540,6 +540,9 @@ UFS节能开关的`sysfs`节点路径为`/sys/devices/platform/soc/1d84000.ufshc
 - @瞬光飞翔(coolapk)  
 - @kuiot(coolapk)  
 - @常凯申将军(coolapk)  
+- emptybot08(github)  
+- ahzhi(github)  
+- Saumer7(github)  
 
 ## 捐赠
 

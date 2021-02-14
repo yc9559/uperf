@@ -2,7 +2,7 @@
 # Cgroup Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 202101230
+# Version: 20210204
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -12,13 +12,13 @@ BASEDIR="$(dirname "$0")"
 # reserve one LITTLE for hwservicemanager which will block composer
 # thread priority settings not working on hwservicemanager
 # okay, disabling perf-hal resulting hwservicemanager frequently wakeup
-CPUMASK_ULV="03"
-CPUMASK_LOW="0f"
-CPUMASK_MID="63"
+CPUMASK_ULV="08"
+CPUMASK_LOW="0e"
+CPUMASK_MID="73"
 CPUMASK_HIGH="f0"
-CPUID_ULV="0-1"
-CPUID_LOW="0-3"
-CPUID_MID="0-1,5-6"
+CPUID_ULV="3"
+CPUID_LOW="1-3"
+CPUID_MID="0-1,4-7" # uperf set 0-1/0-6 for foreground, cpu7 reserved for launcher
 CPUID_HIGH="4-7"
 
 # avoid matching grep itself
@@ -149,9 +149,10 @@ change_task_high_prio()
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            # audio thread nice <= -16
             comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
-            log "change $1/$comm($temp_tid) -> Nice -20"
-            renice -n -20 -p "$temp_tid" >> $LOG_FILE
+            log "change $1/$comm($temp_tid) -> Nice -15"
+            renice -n -15 -p "$temp_tid" >> $LOG_FILE
         done
     done
 }
@@ -166,8 +167,9 @@ change_thread_high_prio()
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
             comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
             if [ "$(echo $comm | grep -i "$2")" != "" ]; then
-                log "change $1/$comm($temp_tid) -> Nice -20"
-                renice -n -20 -p "$temp_tid" >> $LOG_FILE
+                # audio thread nice <= -16
+                log "change $1/$comm($temp_tid) -> Nice -15"
+                renice -n -15 -p "$temp_tid" >> $LOG_FILE
             fi
         done
     done

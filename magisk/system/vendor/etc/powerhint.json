@@ -7,6 +7,9 @@
                 "44",
                 "1000"
             ],
+            "Type": "File",
+            "DefaultIndex": 0,
+            "ResetOnInit": true,
             "HoldFd": true
         }
     ],
@@ -73,9 +76,9 @@
         },
         {
             "PowerHint": "AUDIO_LOW_LATENCY",
-            "Node": "PowerHALAudioState",
+            "Node": "PMQoSCpuDmaLatency",
             "Duration": 0,
-            "Value": "AUDIO_LOW_LATENCY"
+            "Value": "1000"
         },
         {
             "PowerHint": "AUDIO_LOW_LATENCY",
@@ -85,9 +88,9 @@
         },
         {
             "PowerHint": "EXPENSIVE_RENDERING",
-            "Node": "PowerHALRenderingState",
+            "Node": "PMQoSCpuDmaLatency",
             "Duration": 0,
-            "Value": "EXPENSIVE_RENDERING"
+            "Value": "1000"
         },
         {
             "PowerHint": "EXPENSIVE_RENDERING",
