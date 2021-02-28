@@ -225,6 +225,15 @@ _get_sdm82x_type()
     fi
 }
 
+_get_e8890_type()
+{
+    if [ "$(_is_eas)" == "true" ]; then
+        echo "e8890_eas"
+    else
+        echo "e8890_hmp"
+    fi
+}
+
 _get_e8895_type()
 {
     if [ "$(_is_eas)" == "true" ]; then
@@ -304,11 +313,11 @@ _get_cfgname()
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
-    "universal9825") ret="e9820" || echo "! Uperf may have compatibility issuses on Exynos 9825 platform." ;;
-    "universal9820") ret="e9820" || echo "! Uperf may have compatibility issuses on Exynos 9820 platform." ;;
+    "universal9825") ret="e9820" ;;
+    "universal9820") ret="e9820" ;;
     "universal9810") ret="e9810" ;;
     "universal8895") ret="$(_get_e8895_type)" ;;
-    "universal8890") ret="e8890" ;;
+    "universal8890") ret="$(_get_e8890_type)" ;;
     "universal7420") ret="e7420" ;;
     "mt6785")        ret="mtg90t" ;;
     "mt6853")        ret="$(_get_mt6853_type)" ;;
@@ -326,7 +335,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.02.14)"
+    echo "* Version: v2 (21.02.28)"
     echo ""
 }
 
@@ -397,13 +406,21 @@ powerhal_stub_install()
     _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.cfg" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/perf/perfboostsconfig.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+}
+
+place_user_config()
+{
+    if [ ! -e "/sdcard/Android/cfg_uperf_display.txt" ]; then
+        cp $BASEDIR/config/cfg_uperf_display.txt /sdcard/Android/cfg_uperf_display.txt
+    fi
 }
 
 uperf_print_banner
 uperf_install
 injector_install
 powerhal_stub_install
+place_user_config
 exit 0

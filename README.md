@@ -506,6 +506,7 @@ UFS节能开关的`sysfs`节点路径为`/sys/devices/platform/soc/1d84000.ufshc
 - [TinyInjector](https://github.com/shunix/TinyInjector)
 - [xHook](https://github.com/iqiyi/xHook)
 - [@cjybyjk](https://github.com/cjybyjk)
+- [@SatySatsZB](https://github.com/SatySatsZB)
 - @YMJ
 
 感谢以下用户的测试反馈和错误定位：  

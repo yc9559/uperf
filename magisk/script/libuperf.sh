@@ -2,11 +2,12 @@
 # Uperf Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20200418
+# Version: 20210225
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
 . $BASEDIR/libcommon.sh
+. $BASEDIR/libcgroup.sh
 
 ###############################
 # PATHs
@@ -52,14 +53,10 @@ uperf_start()
     lock_val "131072" /proc/sys/fs/inotify/max_user_watches
     lock_val "1024" /proc/sys/fs/inotify/max_user_instances
 
-    # cleanup
-    rm /sdcard/Android/log_uperf.log
-    rm /sdcard/Android/log_uperf.log.bak
-
     # start uperf
-    "$MODULE_PATH/$UPERF_REL/$UPERF_NAME" -o "$uperf_log_path" "$uperf_config_path" 2>> "$uperf_log_path"
+    "$MODULE_PATH/$UPERF_REL/$UPERF_NAME" -o "$uperf_log_path" "$uperf_config_path"
     # waiting for uperf initialization
-    sleep 1
-    # uperf shouldn't preempt foreground tasks
-    change_task_cgroup "$UPERF_NAME" "background" "cpuset"
+    sleep 2
+    # uperf shouldn't preempt foreground tasks, pin on cpu0-1
+    change_task_affinity "$UPERF_NAME" "3"
 }

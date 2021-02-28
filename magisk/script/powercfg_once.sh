@@ -35,13 +35,12 @@ unify_cgroup()
     lock_val "0" /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive
 
     # VMOS may set cpuset/background/cpus to "0"
-    lock_val "$CPUID_MID" /dev/cpuset/foreground/boost/cpus
-    lock_val "$CPUID_MID" /dev/cpuset/foreground/cpus
-    lock_val "$CPUID_LOW" /dev/cpuset/background/cpus
+    lock_val "$(cat /dev/cpuset/foreground/cpus)" /dev/cpuset/foreground/boost/cpus
+    lock /dev/cpuset/foreground/cpus
+    lock /dev/cpuset/background/cpus
 
     # Reduce Perf Cluster Wakeup
     # daemons
-    pin_proc_on_pwr "\[rcu"
     pin_proc_on_pwr "crtc_commit"
     pin_proc_on_pwr "crtc_event"
     pin_proc_on_pwr "ueventd"
@@ -49,18 +48,15 @@ unify_cgroup()
     pin_proc_on_pwr "mdnsd"
     pin_proc_on_pwr "pdnsd"
     pin_proc_on_pwr "qcrild"
-    pin_proc_on_pwr "magiskd"
     pin_proc_on_pwr "daemon"
     pin_proc_on_pwr "analytics"
     # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "\.hardware\."
-    # save bandwidth for UI
-    pin_proc_on_mid "system_server"
     # pwr cluster has enough capacity for surfaceflinger
     pin_proc_on_pwr "surfaceflinger"
     # MediaProvider is background service
     pin_proc_on_pwr "com\.android\.providers\.media"
-    pin_proc_on_pwr "android\.process.media"
+    pin_proc_on_pwr "android\.process\.media"
     # com.miui.securitycenter & com.miui.securityadd
     pin_proc_on_pwr "miui\.security"
 
@@ -69,28 +65,26 @@ unify_cgroup()
     # input dispatcher
     change_thread_high_prio "system_server" "input"
     # transition animation
-    pin_thread_on_perf "system_server" "android\.ui"
-    pin_thread_on_perf "system_server" "android\.display"
     change_thread_rt "system_server" "android\.ui" "1"
     change_thread_rt "system_server" "android\.display" "1"
     # not important
     pin_thread_on_pwr "system_server" "Miui"
     pin_thread_on_pwr "system_server" "Connect"
     pin_thread_on_pwr "system_server" "Network"
-    pin_thread_on_ulv "system_server" "Async"
-    pin_thread_on_ulv "system_server" "backup"
-    pin_thread_on_ulv "system_server" "Greezer"
-    pin_thread_on_ulv "system_server" "TaskSnapshot"
-    pin_thread_on_ulv "system_server" "Oom"
-    pin_thread_on_ulv "system_server" "Sync"
-    pin_thread_on_ulv "system_server" "Observer"
-    pin_thread_on_ulv "system_server" "Power"
-    pin_thread_on_ulv "system_server" "Sensor"
-    pin_thread_on_ulv "system_server" "Wifi"
-    pin_thread_on_ulv "system_server" "Thread-"
-    pin_thread_on_ulv "system_server" "pool-"
-    pin_thread_on_ulv "system_server" "Jit thread pool"
-    # pin_thread_on_ulv "system_server" "\.bg" # it blocks binders
+    pin_thread_on_pwr "system_server" "Wifi"
+    pin_thread_on_pwr "system_server" "Async"
+    pin_thread_on_pwr "system_server" "backup"
+    pin_thread_on_pwr "system_server" "Greezer"
+    pin_thread_on_pwr "system_server" "TaskSnapshot"
+    pin_thread_on_pwr "system_server" "Oom"
+    pin_thread_on_pwr "system_server" "Sync"
+    pin_thread_on_pwr "system_server" "Observer"
+    pin_thread_on_pwr "system_server" "Power"
+    pin_thread_on_pwr "system_server" "Sensor"
+    pin_thread_on_pwr "system_server" "Thread-"
+    pin_thread_on_pwr "system_server" "pool-"
+    pin_thread_on_pwr "system_server" "Jit thread pool"
+    # pin_thread_on_pwr "system_server" "\.bg" # it blocks binders
     # do not let GC thread block system_server
     # pin_thread_on_mid "system_server" "HeapTaskDaemon"
     # pin_thread_on_mid "system_server" "FinalizerDaemon"
@@ -104,10 +98,6 @@ unify_cgroup()
     # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
     # perf will automatically set self to prio=100
     unpin_proc "\.hardware\.perf"
-    # kworkers may block binders
-    change_task_high_prio "\[rcu"
-    change_task_high_prio "\[kworker\/"
-    change_task_high_prio "\[ksoftirqd\/"
     # fix laggy bilibili feed scrolling
     change_task_cgroup "android\.phone" "foreground" "cpuset"
     change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
@@ -134,6 +124,13 @@ unify_cgroup()
     # boost app boot process, zygote--com.xxxx.xxx
     unpin_proc "zygote"
     change_task_high_prio "zygote"
+    # boost android process pool, usap--com.xxxx.xxx
+    unpin_proc "usap"
+    change_task_high_prio "usap"
+
+    # busybox fork from magiskd
+    pin_proc_on_mid "magiskd"
+    change_task_nice "magiskd" "10"
 }
 
 unify_cpufreq()
@@ -337,23 +334,20 @@ disable_userspace_boost()
 {
     # Qualcomm perfd
     stop perfd 2> /dev/null
-    # Qualcomm perfhal
-    perfhal_stop
+
+    # Qualcomm&MTK perfhal
+    # keep running with empty config file
+    # perfhal_stop
+
     # brain service maybe not smart
     stop oneplus_brain_service 2> /dev/null
+
     # disable service below will BOOM
     # stop vendor.power.stats-hal-1-0
     # stop vendor.power-hal-1-0
     # stop vendor.power-hal-1-1
     # stop vendor.power-hal-1-2
     # stop vendor.power-hal-1-3
-}
-
-enable_userspace_boost()
-{
-    # Qualcomm perfhal
-    # running with empty config file
-    perfhal_start
 }
 
 log "PATH=$PATH"
@@ -365,7 +359,6 @@ unify_cpufreq
 unify_gpufreq
 unify_sched
 unify_lpm
-enable_userspace_boost
 
 # make sure that all the related cpu is online
 unify_cgroup

@@ -12,14 +12,12 @@ BASEDIR="$(dirname "$0")"
 # reserve one LITTLE for hwservicemanager which will block composer
 # thread priority settings not working on hwservicemanager
 # okay, disabling perf-hal resulting hwservicemanager frequently wakeup
-CPUMASK_ULV="08"
-CPUMASK_LOW="0e"
-CPUMASK_MID="73"
-CPUMASK_HIGH="f0"
-CPUID_ULV="3"
-CPUID_LOW="1-3"
-CPUID_MID="0-1,4-7" # uperf set 0-1/0-6 for foreground, cpu7 reserved for launcher
-CPUID_HIGH="4-7"
+# CPUMASK_LOW="0e"
+# CPUMASK_MID="73"
+# CPUMASK_HIGH="f0"
+# CPUID_LOW="1-3"
+# CPUID_MID="0-1,4-7" # uperf set 0-1/0-6 for foreground, cpu7 reserved for launcher
+# CPUID_HIGH="4-7"
 
 # avoid matching grep itself
 # ps -Ao pid,args | grep kswapd
@@ -182,13 +180,6 @@ unpin_thread()
 }
 
 # $1:task_name $2:thread_name
-pin_thread_on_ulv()
-{
-    change_thread_cgroup "$1" "$2" "background" "cpuset"
-    change_thread_affinity "$1" "$2" "$CPUMASK_ULV"
-}
-
-# $1:task_name $2:thread_name
 pin_thread_on_pwr()
 {
     change_thread_cgroup "$1" "$2" "background" "cpuset"
@@ -197,28 +188,21 @@ pin_thread_on_pwr()
 # $1:task_name $2:thread_name
 pin_thread_on_mid()
 {
-    unpin_thread "$1" "$2"
-    change_thread_affinity "$1" "$2" "$CPUMASK_MID"
+    change_thread_cgroup "$1" "$2" "foreground" "cpuset"
+    change_thread_affinity "$1" "$2" "7f"
 }
 
 # $1:task_name $2:thread_name
 pin_thread_on_perf()
 {
     unpin_thread "$1" "$2"
-    change_thread_affinity "$1" "$2" "$CPUMASK_HIGH"
+    change_thread_affinity "$1" "$2" "f0"
 }
 
 # $1:task_name
 unpin_proc()
 {
     change_task_cgroup "$1" "" "cpuset"
-}
-
-# $1:task_name
-pin_proc_on_ulv()
-{
-    change_task_cgroup "$1" "background" "cpuset"
-    change_task_affinity "$1" "$CPUMASK_ULV"
 }
 
 # $1:task_name
@@ -230,13 +214,13 @@ pin_proc_on_pwr()
 # $1:task_name
 pin_proc_on_mid()
 {
-    unpin_proc "$1"
-    change_task_affinity "$1" "$CPUMASK_MID"
+    change_task_cgroup "$1" "foreground" "cpuset"
+    change_task_affinity "$1" "7f"
 }
 
 # $1:task_name
 pin_proc_on_perf()
 {
     unpin_proc "$1"
-    change_task_affinity "$1" "$CPUMASK_HIGH"
+    change_task_affinity "$1" "f0"
 }

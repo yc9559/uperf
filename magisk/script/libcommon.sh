@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20201206
+# Version: 20210225
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -27,6 +27,14 @@ mutate()
     if [ -f "$2" ]; then
         chmod 0666 "$2" 2> /dev/null
         echo "$1" > "$2"
+    fi
+}
+
+# $1:file path
+lock() 
+{
+    if [ -f "$1" ]; then
+        chmod 0444 "$1" 2> /dev/null
     fi
 }
 
@@ -124,6 +132,15 @@ get_nr_core()
 is_aarch64()
 {
     if [ "$(getprop ro.product.cpu.abi)" == "arm64-v8a" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
+is_magisk()
+{
+    if [ "$(echo $BASEDIR | grep "^\/data\/adb\/modules")" != "" ]; then
         echo "true"
     else
         echo "false"

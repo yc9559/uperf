@@ -11,12 +11,10 @@
     <PerfBoost>
 
     <!--app lauch boost-->
-        <!-- SCHEDBOOST resource opcode, value-->
-
         <!-- Type="1", main launch boost of 2sec -->
         <Config
-            Id="0x00001081" Type="1" Enable="true" Timeout="500" Target="?"
-            Resources="0x40C00000, 0x0" />
+            Id="0x00001081" Type="1" Enable="false" Timeout="500" Target="?"
+            Resources="" />
 
     </PerfBoost>
 </BoostConfigs>

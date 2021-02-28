@@ -1,0 +1,7 @@
+# Uperf dynamic refresh rate config
+# 规则优先级从高到低排列，最多64条
+# 格式：包名 空闲fps 画面内容更新fps 触摸操作fps
+# 例子:
+# tv.danmaku.bili 60 60 120
+# com.hypergryph.arknights 60 60 60
+# * 60 120 120

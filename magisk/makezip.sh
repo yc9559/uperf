@@ -14,7 +14,7 @@ cd ..
 
 echo "Copy files from project..."
 cp -r build/uperf magisk/uperf/
-cp -r build/configs/ magisk/config
+cp build/configs/*.json magisk/config
 
 echo "Make flashable magisk package..."
 cd magisk
@@ -23,6 +23,6 @@ zip "$zipname" -q -9 -r . -x makezip.sh
 
 echo "Cleanup..."
 rm -r uperf
-rm -r config
+rm config/*.json
 
 echo "Make zip done."
