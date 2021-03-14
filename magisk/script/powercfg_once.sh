@@ -12,27 +12,20 @@ BASEDIR="$(dirname "$0")"
 
 unify_cgroup()
 {
-    # clear stune
-    lock_val "0" /dev/stune/background/schedtune.sched_boost_no_override
-    lock_val "0" /dev/stune/background/schedtune.boost
-    lock_val "0" /dev/stune/background/schedtune.prefer_idle
-    lock_val "0" /dev/stune/foreground/schedtune.sched_boost_no_override
-    lock_val "0" /dev/stune/foreground/schedtune.boost
-    lock_val "0" /dev/stune/foreground/schedtune.prefer_idle
-    lock_val "1" /dev/stune/top-app/schedtune.sched_boost_no_override
-    lock_val "0" /dev/stune/top-app/schedtune.boost
-    lock_val "0" /dev/stune/top-app/schedtune.prefer_idle
-
-    # clear uclamp
-    lock_val "0" /dev/cpuctl/background/cpu.uclamp.sched_boost_no_override
-    lock_val "0" /dev/cpuctl/background/cpu.uclamp.min
-    lock_val "0" /dev/cpuctl/background/cpu.uclamp.latency_sensitive
-    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.sched_boost_no_override
-    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.min
-    lock_val "0" /dev/cpuctl/foreground/cpu.uclamp.latency_sensitive
-    lock_val "1" /dev/cpuctl/top-app/cpu.uclamp.sched_boost_no_override
-    lock_val "0" /dev/cpuctl/top-app/cpu.uclamp.min
-    lock_val "0" /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive
+    # clear stune & uclamp
+    for g in background foreground top-app; do
+        lock_val "0" /dev/stune/$g/schedtune.sched_boost_no_override
+        lock_val "0" /dev/stune/$g/schedtune.boost
+        lock_val "0" /dev/stune/$g/schedtune.prefer_idle
+        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.sched_boost_no_override
+        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.min
+        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.latency_sensitive
+    done
+    for cg in stune cpuctl; do
+        for p in $(cat /dev/$cg/top-app/tasks); do
+            echo $p > /dev/$cg/foreground/tasks
+        done
+    done
 
     # VMOS may set cpuset/background/cpus to "0"
     lock_val "$(cat /dev/cpuset/foreground/cpus)" /dev/cpuset/foreground/boost/cpus
@@ -47,16 +40,16 @@ unify_cgroup()
     pin_proc_on_pwr "netd"
     pin_proc_on_pwr "mdnsd"
     pin_proc_on_pwr "pdnsd"
-    pin_proc_on_pwr "qcrild"
-    pin_proc_on_pwr "daemon"
     pin_proc_on_pwr "analytics"
+    pin_proc_on_pwr "daemon"
+    change_task_affinity "android\.system\.suspend" "7f"
     # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "\.hardware\."
     # pwr cluster has enough capacity for surfaceflinger
     pin_proc_on_pwr "surfaceflinger"
     # MediaProvider is background service
-    pin_proc_on_pwr "com\.android\.providers\.media"
     pin_proc_on_pwr "android\.process\.media"
+    pin_proc_on_mid "com\.android\.providers\.media"
     # com.miui.securitycenter & com.miui.securityadd
     pin_proc_on_pwr "miui\.security"
 
@@ -81,6 +74,7 @@ unify_cgroup()
     pin_thread_on_pwr "system_server" "Observer"
     pin_thread_on_pwr "system_server" "Power"
     pin_thread_on_pwr "system_server" "Sensor"
+    pin_thread_on_pwr "system_server" "batterystats"
     pin_thread_on_pwr "system_server" "Thread-"
     pin_thread_on_pwr "system_server" "pool-"
     pin_thread_on_pwr "system_server" "Jit thread pool"
@@ -107,20 +101,25 @@ unify_cgroup()
     # let UX related Binders run with top-app
     change_thread_cgroup "surfaceflinger" "^Binder" "top-app" "cpuset"
     change_thread_cgroup "system_server" "^Binder" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "^Binder" "top-app" "stune"
+    change_thread_cgroup "system_server" "^Binder" "top-app" "cpuctl"
     change_thread_cgroup "\.hardware\.display" "^Binder" "top-app" "cpuset"
     change_thread_cgroup "\.composer" "^Binder" "top-app" "cpuset"
     # transition animation
     change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuset"
 
     # Heavy Scene Boost
-    # camera service
-    unpin_proc "\.hardware\.camera\.provider"
+    # camera & video recording
+    pin_proc_on_mid "\.hardware\.camera"
+    pin_proc_on_mid "^camera"
+    pin_proc_on_mid "\.hardware\.audio"
+    pin_proc_on_mid "^audio"
     # provide best performance for fingerprint service
-    unpin_proc "\.hardware\.biometrics\.fingerprint"
+    pin_proc_on_perf "\.hardware\.biometrics\.fingerprint"
     change_task_high_prio "\.hardware\.biometrics\.fingerprint"
     # mfp-daemon: goodix in-screen fingerprint daemon
-    unpin_proc "mfp"
-    change_task_high_prio "mfp"
+    pin_proc_on_perf "mfp-daemon"
+    change_task_high_prio "mfp-daemon"
     # boost app boot process, zygote--com.xxxx.xxx
     unpin_proc "zygote"
     change_task_high_prio "zygote"
@@ -205,7 +204,7 @@ unify_sched()
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the migrate thresholds need compensate.
     set_sched_migrate "50" "25" "999" "888"
-    set_sched_migrate "50 80" "25 40" "999" "888"
+    set_sched_migrate "50 90" "25 50" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -214,10 +213,17 @@ unify_sched()
 
 unify_lpm()
 {
-    # C-state controller
-    lock_val "1" $LPM/lpm_prediction
+    # enter C-state level 3 took ~500us
     lock_val "0" $LPM/sleep_disabled
-    lock_val "10" $LPM/bias_hyst
+    lock_val "0" $LPM/lpm_ipi_prediction
+    if [ -f "$LPM/bias_hyst" ]; then
+        lock_val "1" $LPM/bias_hyst
+        lock_val "0" $LPM/lpm_prediction
+    else
+        lock_val "1" $LPM/lpm_prediction
+    fi
+    lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
+    lock_val "1000000" $SCHED/sched_busy_hyst_ns
 }
 
 disable_hotplug()
@@ -336,8 +342,11 @@ disable_userspace_boost()
     stop perfd 2> /dev/null
 
     # Qualcomm&MTK perfhal
-    # keep running with empty config file
-    # perfhal_stop
+    # keep perfhal running with empty config file in magisk mode
+    [ "$(is_magisk)" == "false" ] && perfhal_stop
+
+    # xiaomi perfservice
+    stop vendor.perfservice
 
     # brain service maybe not smart
     stop oneplus_brain_service 2> /dev/null

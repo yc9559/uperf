@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210225
+# Version: 20210309
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -132,6 +132,15 @@ get_nr_core()
 is_aarch64()
 {
     if [ "$(getprop ro.product.cpu.abi)" == "arm64-v8a" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
+is_mtk()
+{
+    if [ "$(getprop | grep ro.mtk)" != "" ]; then
         echo "true"
     else
         echo "false"

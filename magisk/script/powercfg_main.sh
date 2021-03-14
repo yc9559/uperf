@@ -24,24 +24,6 @@ verify_power_mode()
     esac
 }
 
-save_panel()
-{
-    clear_panel
-    write_panel ""
-    write_panel "Uperf https://github.com/yc9559/uperf/"
-    write_panel "Author: Matt Yang"
-    write_panel "Version: v2 (21.02.28)"
-    write_panel "Last performed: $(date '+%Y-%m-%d %H:%M:%S')"
-    write_panel ""
-    write_panel "[Uperf status]"
-    write_panel "$(uperf_status)"
-    write_panel ""
-    write_panel "[Settings]"
-    write_panel "# The default mode applied at boot"
-    write_panel "# Available mode: balance powersave performance"
-    write_panel "default_mode=$default_mode"
-}
-
 # 1. target from exec parameter
 action="$1"
 if [ "$action" != "" ]; then
@@ -49,13 +31,5 @@ if [ "$action" != "" ]; then
     apply_power_mode "$action"
     exit 0
 fi
-
-# 2. target from panel
-default_mode="$(read_cfg_value default_mode)"
-default_mode="$(verify_power_mode "$default_mode")"
-apply_power_mode "$default_mode"
-
-# save mode for automatic applying mode after reboot
-save_panel
 
 exit 0

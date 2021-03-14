@@ -5,6 +5,7 @@
 # Version: 20201129
 
 BASEDIR="$(dirname $(readlink -f "$0"))"
+USER_PATH="/sdcard/yc/uperf"
 
 # $1:error_message
 _abort()
@@ -279,11 +280,14 @@ _get_mt6885_type()
 # $1:cfg_name
 _setup_platform_file()
 {
-    if [ -f $BASEDIR/config/$1.json ]; then
-        mv $BASEDIR/config/cfg_uperf.json $BASEDIR/config/cfg_uperf.json.bak 2> /dev/null
-        cp $BASEDIR/config/$1.json $BASEDIR/config/cfg_uperf.json 2> /dev/null
-    else
-        _abort "! Config file \"$1.json\" not found."
+    mv -f $USER_PATH/cfg_uperf.json $USER_PATH/cfg_uperf.json.bak 2> /dev/null
+    cp $BASEDIR/config/$1.json $USER_PATH/cfg_uperf.json 2> /dev/null
+}
+
+_place_user_config()
+{
+    if [ ! -e "$USER_PATH/cfg_uperf_display.txt" ]; then
+        cp $BASEDIR/config/cfg_uperf_display.txt $USER_PATH/cfg_uperf_display.txt 2> /dev/null
     fi
 }
 
@@ -335,12 +339,19 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.02.28)"
+    echo "* Version: v2 (21.03.14)"
     echo ""
+}
+
+uperf_print_finish()
+{
+    echo "- Uperf installation was successful."
 }
 
 uperf_install()
 {
+    echo "- Installing uperf"
+
     local target
     local cfgname
 
@@ -353,12 +364,15 @@ uperf_install()
         echo "- ro.product.board=$target"
     fi
 
-    if [ "$cfgname" != "unsupported" ]; then
+    mkdir -p $USER_PATH
+    if [ "$cfgname" != "unsupported" ] && [ -f $BASEDIR/config/$cfgname.json ]; then
         echo "- Use $cfgname.json"
         _setup_platform_file "$cfgname"
     else
         _abort "! [$target] not supported."
     fi
+    _place_user_config
+    rm -rf $BASEDIR/config
 
     if [ "$(_is_aarch64)" == "true" ]; then
         cp "$BASEDIR/uperf/arm64-v8a/uperf" "$BASEDIR/bin"
@@ -371,11 +385,13 @@ uperf_install()
     # in case of set_perm_recursive is broken
     chmod 0755 $BASEDIR/bin/*
 
-    echo "- Uperf installation was successful."
+    rm -rf $BASEDIR/uperf
 }
 
 injector_install()
 {
+    echo "- Installing injector"
+
     local src_path
     local dst_path
     if [ "$(_is_aarch64)" == "true" ]; then
@@ -399,28 +415,23 @@ injector_install()
 
     # create injector enable flag
     touch $BASEDIR/enable_injector
+
+    rm -rf $BASEDIR/injector
 }
 
 powerhal_stub_install()
 {
+    echo "- Installing perfhal stub"
+
     _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.cfg" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/perfboostsconfig.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-}
-
-place_user_config()
-{
-    if [ ! -e "/sdcard/Android/cfg_uperf_display.txt" ]; then
-        cp $BASEDIR/config/cfg_uperf_display.txt /sdcard/Android/cfg_uperf_display.txt
-    fi
+    _set_perm "$BASEDIR/system/vendor/etc/perf/targetconfig.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
 }
 
 uperf_print_banner
 uperf_install
 injector_install
 powerhal_stub_install
-place_user_config
+uperf_print_finish
 exit 0

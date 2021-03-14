@@ -4,16 +4,12 @@ MODDIR=${0%/*}
 # vendor/etc/powerhint.json: android perf hal
 # vendor/etc/powerscntbl.cfg: mediatek perf hal (android 9)
 # vendor/etc/powerscntbl.xml: mediatek perf hal (android 10+)
-# vendor/etc/perf/perfboostsconfig.json: qualcomm perf hal
-# vendor/etc/perf/commonresourceconfigs.json: qualcomm perf hal resource path
-# vendor/etc/perf/targetresourceconfigs.json: qualcomm perf hal resource path overrides
+# vendor/etc/perf/targetconfig.json: qualcomm perf hal targets
 perfcfgs="
 vendor/etc/powerhint.json
 vendor/etc/powerscntbl.cfg
 vendor/etc/powerscntbl.xml
-vendor/etc/perf/perfboostsconfig.xml
-vendor/etc/perf/commonresourceconfigs.xml
-vendor/etc/perf/targetresourceconfigs.xml
+vendor/etc/perf/targetconfig.xml
 "
 for f in $perfcfgs; do
     [ ! -f "/$f" ] && rm "$MODDIR/system/$f"

@@ -81,18 +81,6 @@
             "Value": "1000"
         },
         {
-            "PowerHint": "AUDIO_LOW_LATENCY",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "EXPENSIVE_RENDERING",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
             "PowerHint": "EXPENSIVE_RENDERING",
             "Node": "PMQoSCpuDmaLatency",
             "Duration": 0,

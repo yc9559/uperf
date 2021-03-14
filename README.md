@@ -28,7 +28,7 @@ https://github.com/yc9559/uperf/releases
 ### Magisk方式
 
 1. 下载后通过Magisk Manager刷入，Magisk版本不低于18.0
-2. 重启后查看`/sdcard/Android/log_uperf.txt`检查uperf是否正常自启动
+2. 重启后查看`/sdcard/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
 
 ### 手动安装
 
@@ -40,13 +40,13 @@ https://github.com/yc9559/uperf/releases
 6. 打开`/data/cache/injector.log`，检查sfanalysis注入是否成功
 7. 如果关联自启动到第三方APP，设置在开机完成后执行`run_uperf.sh`
 8. 如果关联自启动到系统启动脚本，插入`sh /data/uperf/initsvc_uperf.sh`
-9. 重启后查看`/sdcard/Android/log_uperf.txt`检查uperf是否正常自启动
+9. 重启后查看`/sdcard/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
 
 ### 性能模式切换
 
 #### 修改启动时的默认性能模式
 
-1. 打开`/sdcard/Android/panel_uperf.txt`
+1. 打开`/sdcard/yc/uperf/panel_uperf.txt`
 2. 修改`default_mode=balance`, 其中`balance`为开机后使用的默认性能模式，可选的模式有:
    - `balance`均衡模式，比原厂略流畅的同时略省电
    - `powersave`卡顿模式，保证基本流畅的同时尽可能降低功耗
@@ -214,7 +214,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 
 ## 自定义配置文件
 
-本项目已经为大多数热门硬件平台提供了调参后的Uperf配置文件，但总有一些情况预调参的配置不适用于你的软硬件平台，例如冷门的硬件平台、自定义的内核。此外，也有自定义现有预调参配置文件的需求，例如调高交互时的最低CPU频率、增加GPU频率范围调整。在Uperf设计之初便考虑到了这类需求，开放几乎所有的可调参数，并且在配置文件更改保存后自动重新加载，改善在手机端调试参数的效率。Magisk模块使用的配置文件位于`/data/adb/modules/uperf/config/cfg_uperf.json`。
+本项目已经为大多数热门硬件平台提供了调参后的Uperf配置文件，但总有一些情况预调参的配置不适用于你的软硬件平台，例如冷门的硬件平台、自定义的内核。此外，也有自定义现有预调参配置文件的需求，例如调高交互时的最低CPU频率、增加GPU频率范围调整。在Uperf设计之初便考虑到了这类需求，开放几乎所有的可调参数，并且在配置文件更改保存后自动重新加载，改善在手机端调试参数的效率。Magisk模块使用的配置文件位于`/sdcard/yc/uperf/cfg_uperf.json`。
 
 ### 元信息
 
@@ -241,7 +241,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 
 ```json
 "common": {
-    "switchInode": "/data/uperf_powermode",
+    "switchInode": "/sdcard/yc/uperf/cur_powermode",
     "verboseLog": false,
     "uxAffinity": true,
     "stateTransThd": {
@@ -279,12 +279,12 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 
 在Uperf启动时会读取`switchInode`对应路径的文件获取默认性能模式,在日志以如下方式体现：  
 ```
-[13:03:33][I] CfgMgr: Read default powermode from /data/uperf_powermode
+[13:03:33][I] CfgMgr: Read default powermode from /sdcard/yc/uperf/cur_powermode
 [13:03:33][I] CfgMgr: Powermode "(null)" -> "balance"
 ```
 `switchInode`对应路径的文件，监听新模式名称的写入完成模式切换：  
 ```shell
-echo "powersave" > /data/uperf_powermode
+echo "powersave" > /sdcard/yc/uperf/cur_powermode
 ```
 在日志以如下方式体现：
 ``` 
