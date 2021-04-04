@@ -66,6 +66,18 @@ change_thread_cgroup()
     done
 }
 
+# $1:task_name $2:cgroup_name $3:"cpuset"/"stune"
+change_main_thread_cgroup()
+{
+    local ps_ret
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
+        comm="$(cat /proc/$temp_pid/comm)"
+        log "change $comm($temp_pid) -> cgroup:$2"
+        echo $temp_pid > "/dev/$3/$2/tasks"
+    done
+}
+
 # $1:task_name $2:hex_mask(0x00000003 is CPU0 and CPU1)
 change_task_affinity()
 {
@@ -188,7 +200,7 @@ pin_thread_on_pwr()
 # $1:task_name $2:thread_name
 pin_thread_on_mid()
 {
-    change_thread_cgroup "$1" "$2" "foreground" "cpuset"
+    unpin_thread "$1" "$2"
     change_thread_affinity "$1" "$2" "7f"
 }
 
@@ -214,7 +226,7 @@ pin_proc_on_pwr()
 # $1:task_name
 pin_proc_on_mid()
 {
-    change_task_cgroup "$1" "foreground" "cpuset"
+    unpin_proc "$1"
     change_task_affinity "$1" "7f"
 }
 

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+ * Copyright (c) 2017 Qualcomm Technologies, Inc.
+ * All Rights Reserved.
+ * Confidential and Proprietary - Qualcomm Technologies, Inc.
+-->
+
+<!-- Supported XML tags with their fields.
+ * Major tag supports OpcodeValue.
+ * Minor tag supports OpcodeValue, Nodepath and Supported(Optional) fields.
+ * By default, all the resources are assumed as supported.
+ Supported field can be used to mark a resource as not supported.
+ * All the interactive nodes, ondemand nodes and some nodes of sched major
+ group which aren't being used are marked as Not supported by default and
+ can be enabled by using the target specific config files. -->
+
+<!-- For resources which update multiple nodes or which require speical
+acquire/release funcitons, need to mention the keyword SPECIAL_NODE
+in their node path field and accordingly their ApplyOts and ResetOpts
+functions need to be defined in the code.-->
+
+<!-- For adding a new resource, a new minor tag with all mandatory fields
+need to be added just before the end of it's major group. -->
+
+<ResourceConfigs>
+    <PerfResources>
+
+    <!-- display off major start -->
+    <Major OpcodeValue="0x0" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - display_off" />
+    <!-- display off major end -->
+
+    <!-- power collapse major start -->
+    <Major OpcodeValue="0x1" />
+        <Minor OpcodeValue="0x0" Node="/dev/cpu_dma_latency" />
+        <Minor OpcodeValue="0x1" Node="/sys/module/lpm_levels/system/perf/perf-l2-pc/idle_enabled" />
+        <Minor OpcodeValue="0x2" Node="/sys/module/lpm_levels/parameters/bias_hyst" />
+        <Minor OpcodeValue="0x3" Node="/sys/module/lpm_levels/parameters/ref_stddev" />
+        <Minor OpcodeValue="0x4" Node="/sys/module/lpm_levels/parameters/tmr_add" />
+        <Minor OpcodeValue="0x5" Node="/sys/module/lpm_levels/parameters/lpm_ipi_prediction" />
+    <!-- power collapse major end -->
+
+    <!-- cpufreq major start -->
+    <Major OpcodeValue="0x2" />
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+    <!-- cpufreq major end -->
+
+    <!-- sched major start -->
+    <Major OpcodeValue="0x3" />
+        <!--Sysfsnode paths may change basing on the target for minors 0x1, 0x4, 0x5, 0x9.
+            So, for targets with different node paths than default, need to be specified
+            in the target specific resource config xml file. -->
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="" Supported="no" />
+        <Minor OpcodeValue="0x4" Node="" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="" Supported="no" />
+        <Minor OpcodeValue="0x8" Node="" Supported="no" />
+        <Minor OpcodeValue="0x9" Node="" Supported="no" />
+        <Minor OpcodeValue="0xA" Node="" Supported="no" />
+        <Minor OpcodeValue="0xB" Node="" Supported="no" />
+        <Minor OpcodeValue="0xC" Node="" Supported="no" />
+        <Minor OpcodeValue="0xD" Node="" Supported="no" />
+        <Minor OpcodeValue="0xE" Node="" Supported="no" />
+        <Minor OpcodeValue="0xF" Node="" Supported="no" />
+        <Minor OpcodeValue="0x10" Node="" Supported="no" />
+        <Minor OpcodeValue="0x11" Node="" Supported="no" />
+        <Minor OpcodeValue="0x12" Node="" Supported="no" />
+        <Minor OpcodeValue="0x13" Node="" Supported="no" />
+        <Minor OpcodeValue="0x14" Node="" Supported="no" />
+        <Minor OpcodeValue="0x15" Node="" Supported="no" />
+        <Minor OpcodeValue="0x16" Node="" Supported="no" />
+        <!-- sched_freq_aggr_threshold perflock will have contention with sched_boost level 3,
+        so disable this resource for the target which is going to use sched boost 3 level.-->
+        <Minor OpcodeValue="0x17" Node="" Supported="no" />
+        <Minor OpcodeValue="0x18" Node="" Supported="no" />
+        <Minor OpcodeValue="0x19" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1A" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1B" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1C" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1D" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1E" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1F" Node="" Supported="no" />
+        <Minor OpcodeValue="0x20" Node="" Supported="no" /> <!-- sched_task_boost -->
+        <Minor OpcodeValue="0x21" Node="" Supported="no" /> <!--sched_user_hint -->
+        <Minor OpcodeValue="0x22" Node="" Supported="no" /> <!--sched_task_unfilter_nr_windows -->
+        <Minor OpcodeValue="0x23" Node="" Supported="no" /> <!--sched_coloc_downmigrate_ns  -->
+        <Minor OpcodeValue="0x24" Node="" Supported="no" />
+        <Minor OpcodeValue="0x25" Node="" Supported="no" />
+        <Minor OpcodeValue="0x26" Node="" Supported="no" />
+        <Minor OpcodeValue="0x27" Node="" Supported="no" />
+        <Minor OpcodeValue="0x28" Node="" Supported="no" />
+        <Minor OpcodeValue="0x29" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2A" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2B" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2C" Node="" Supported="no" /> <!-- enable sched_task_boost for top-app render thread-->
+        <Minor OpcodeValue="0x2D" Node="" Supported="no" /> <!-- disable sched_task_boost for top-app render thread-->
+        <Minor OpcodeValue="0x2E" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2F" Node="" Supported="no" />
+        <Minor OpcodeValue="0x30" Node="" Supported="no" />
+        <Minor OpcodeValue="0x31" Node="" Supported="no" />
+        <Minor OpcodeValue="0x32" Node="" Supported="no" />
+        <Minor OpcodeValue="0x33" Node="" Supported="no" />
+        <Minor OpcodeValue="0x34" Node="" Supported="no" />
+    <!-- sched major end -->
+
+    <!-- core hotplug major start -->
+    <Major OpcodeValue="0x4" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - lock_min_cores" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - lock_max_cores" />
+    <!-- core hotplug major end-->
+
+    <!-- interactive major start -->
+    <Major OpcodeValue="0x5" />
+        <!-- For following minors node paths might change basing on GovInstanceType and
+        Supported field might change basing on the type of CpufreqGov.-->
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="" Supported="no" />
+        <Minor OpcodeValue="0x4" Node="" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="" Supported="no" />
+        <Minor OpcodeValue="0x8" Node="" Supported="no" />
+        <Minor OpcodeValue="0x9" Node="" Supported="no" />
+        <Minor OpcodeValue="0xA" Node="" Supported="no" />
+        <Minor OpcodeValue="0xB" Node="" Supported="no" />
+        <Minor OpcodeValue="0xC" Node="" Supported="no" />
+        <Minor OpcodeValue="0xD" Node="" Supported="no" />
+        <Minor OpcodeValue="0xE" Node="" Supported="no" />
+        <Minor OpcodeValue="0xF" Node="" Supported="no" />
+        <Minor OpcodeValue="0x10" Node="" Supported="no" />
+        <Minor OpcodeValue="0x11" Node="" Supported="no" />
+        <Minor OpcodeValue="0x12" Node="" Supported="no" />
+        <Minor OpcodeValue="0x13" Node="" Supported="no" />
+    <!-- interactive major end -->
+
+    <!-- cpubw hwmon major start -->
+    <Major OpcodeValue="0x6" />
+        <!-- ALl the following minors might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="" Supported="no" />
+        <Minor OpcodeValue="0x4" Node="" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="" Supported="no" />
+        <Minor OpcodeValue="0x8" Node="" Supported="no" />
+        <Minor OpcodeValue="0x9" Node="" Supported="no" />
+        <!--Here onwards are the path for new opcodes to mark CPU_LLCC_BW nodes.Upper ones
+            of this major are marked as unsupported for the tergets using the new opcodes-->
+        <Minor OpcodeValue="0xA" Node="" Supported="no" />
+        <Minor OpcodeValue="0xB" Node="" Supported="no" />
+        <Minor OpcodeValue="0xC" Node="" Supported="no" />
+        <Minor OpcodeValue="0xD" Node="" Supported="no" />
+        <Minor OpcodeValue="0xE" Node="" Supported="no" />
+        <Minor OpcodeValue="0xF" Node="" Supported="no" />
+    <!-- cpubw hwmon major end -->
+
+    <!-- video major start -->
+    <Major OpcodeValue="0x7" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - handle_vid_encplay_hint" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - handle_vid_decplay_hint" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - handle_disp_hint" />
+    <!-- video major end -->
+
+    <!-- ksm major start -->
+    <Major OpcodeValue="0x8" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - disable_ksm" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - set_ksm_param" />
+    <!-- ksm major end -->
+
+    <!-- ondemand major start -->
+    <Major OpcodeValue="0x9" />
+        <Minor OpcodeValue="0x0" Node="/sys/devices/system/cpu/cpufreq/ondemand/sampling_rate" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="/sys/devices/system/cpu/cpufreq/ondemand/io_is_busy" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="/sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="/sys/devices/system/cpu/cpufreq/ondemand/sync_freq" Supported="no" />
+        <Minor OpcodeValue="0x4" Node="/sys/devices/system/cpu/cpufreq/ondemand/optimal_freq" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="/sys/devices/system/cpu/cpufreq/ondemand/enable_stepup" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="/sys/devices/system/cpu/cpufreq/ondemand/max_intermediate_steps" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="/dev/cpuctl/cpu.notify_on_migrate" Supported="no" />
+    <!-- ondemand major end -->
+
+    <!-- gpu major start -->
+    <Major OpcodeValue="0xA" />
+        <Minor OpcodeValue="0x0" Node="/sys/class/kgsl/kgsl-3d0/default_pwrlevel" />
+        <Minor OpcodeValue="0x1" Node="/sys/class/kgsl/kgsl-3d0/min_pwrlevel" />
+        <Minor OpcodeValue="0x2" Node="/sys/class/kgsl/kgsl-3d0/max_pwrlevel" />
+        <Minor OpcodeValue="0x3" Node="/sys/class/kgsl/kgsl-3d0/devfreq/min_freq" />
+        <Minor OpcodeValue="0x4" Node="/sys/class/kgsl/kgsl-3d0/devfreq/max_freq" />
+        <Minor OpcodeValue="0x5" Node="/sys/class/devfreq/soc:qcom,gpubw/min_freq" />
+        <Minor OpcodeValue="0x6" Node="/sys/class/devfreq/soc:qcom,gpubw/max_freq" />
+        <Minor OpcodeValue="0x7" Node="SPECIAL_NODE - gpu_disable_gpu_nap" />
+        <Minor OpcodeValue="0x8" Node="/sys/class/kgsl/kgsl/proc/%d/state" />
+        <Minor OpcodeValue="0x9" Node="/sys/class/kgsl/kgsl/proc/%d/state" />
+        <Minor OpcodeValue="0xA" Node="/sys/class/kgsl/kgsl-3d0/devfreq/mod_percent" />
+    <!-- gpu major end -->
+
+    <!-- misc major start -->
+    <Major OpcodeValue="0xB" />
+        <Minor OpcodeValue="0x0" Node="SPECIAL_NODE - unsupported" />
+        <Minor OpcodeValue="0x1" Node="SPECIAL_NODE - irq_balancer" />
+        <Minor OpcodeValue="0x2" Node="/sys/module/cpu_boost/parameters/input_boost_freq" />
+        <Minor OpcodeValue="0x3" Node="/proc/sys/vm/swap_ratio" />
+        <Minor OpcodeValue="0x4" Node="StorageNode_path_is_figured_out_based_on_the_target_device" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - dummy_or_keep_alive" />
+        <Minor OpcodeValue="0x6" Node="/sys/module/process_reclaim/parameters/enable_process_reclaim" />
+        <Minor OpcodeValue="0x7" Node="/proc/perfmode" />
+    <!-- misc major end -->
+
+    <!-- llcbw hwmon major start -->
+    <Major OpcodeValue="0xC" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="" Supported="no" />
+        <!--Here onwards are the path for new opcodes to mark LLCC_DDR_BW nodes.Upper ones
+            of this major are marked as unsupported for the tergets using the new opcodes-->
+        <Minor OpcodeValue="0x4" Node="" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="" Supported="no" />
+        <Minor OpcodeValue="0x8" Node="" Supported="no" />
+        <Minor OpcodeValue="0x9" Node="" Supported="no" />
+        <Minor OpcodeValue="0xA" Node="" Supported="no" />
+        <Minor OpcodeValue="0xB" Node="" Supported="no" />
+        <Minor OpcodeValue="0xC" Node="" Supported="no" />
+        <Minor OpcodeValue="0xD" Node="" Supported="no" />
+        <Minor OpcodeValue="0xE" Node="" Supported="no" />
+
+    <!-- llcbw hwmon major end -->
+
+    <!-- memlat major start -->
+    <Major OpcodeValue="0xD" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="" Supported="no" />
+        <Minor OpcodeValue="0x1" Node="" Supported="no" />
+        <Minor OpcodeValue="0x2" Node="" Supported="no" />
+        <Minor OpcodeValue="0x3" Node="" Supported="no" />
+        <Minor OpcodeValue="0x4" Node="" Supported="no" />
+        <Minor OpcodeValue="0x5" Node="" Supported="no" />
+        <Minor OpcodeValue="0x6" Node="" Supported="no" />
+        <Minor OpcodeValue="0x7" Node="" Supported="no" />
+        <Minor OpcodeValue="0x8" Node="" Supported="no" />
+        <Minor OpcodeValue="0x9" Node="" Supported="no" />
+        <Minor OpcodeValue="0xA" Node="" Supported="no" />
+        <Minor OpcodeValue="0xB" Node="" Supported="no" />
+        <Minor OpcodeValue="0xC" Node="" Supported="no" />
+        <Minor OpcodeValue="0xD" Node="" Supported="no" />
+        <Minor OpcodeValue="0xE" Node="" Supported="no" />
+        <Minor OpcodeValue="0xF" Node="" Supported="no" />
+        <Minor OpcodeValue="0x10" Node="" Supported="no" />
+    <!-- memlat major end -->
+
+    <!-- npu major start -->
+    <Major OpcodeValue="0xE" />
+        <!-- ALl the following minors node path might change based on target. -->
+        <Minor OpcodeValue="0x0" Node="/sys/class/devfreq/soc:qcom,npu-npu-llcc-bw/bw_hwmon/sample_ms" />
+        <Minor OpcodeValue="0x1" Node="/sys/class/devfreq/soc:qcom,npu-npu-llcc-bw/bw_hwmon/io_percent" />
+        <Minor OpcodeValue="0x2" Node="SPECIAL_NODE - npu_llcbw_hwmon_hyst_opt" />
+        <!--Here onwards are the path for new opcodes to mark NPU_LLCC_DDR_BW nodes.-->
+        <Minor OpcodeValue="0x3" Node="/sys/class/devfreq/soc:qcom,npu-llcc-ddr-bw/bw_hwmon/sample_ms" />
+        <Minor OpcodeValue="0x4" Node="/sys/class/devfreq/soc:qcom,npu-llcc-ddr-bw/bw_hwmon/io_percent" />
+        <Minor OpcodeValue="0x5" Node="SPECIAL_NODE - npu_ddr_llcbw_hwmon_hyst_opt" />
+    <!-- npu major end -->
+
+    </PerfResources>
+</ResourceConfigs>

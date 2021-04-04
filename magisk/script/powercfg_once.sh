@@ -27,16 +27,17 @@ unify_cgroup()
         done
     done
 
-    # VMOS may set cpuset/background/cpus to "0"
+    # launcher is usually in foreground group
+    lock_val "$(cat /dev/cpuset/foreground/cpus),7" /dev/cpuset/foreground/cpus
     lock_val "$(cat /dev/cpuset/foreground/cpus)" /dev/cpuset/foreground/boost/cpus
     lock /dev/cpuset/foreground/cpus
+    # VMOS may set cpuset/background/cpus to "0"
     lock /dev/cpuset/background/cpus
 
     # Reduce Perf Cluster Wakeup
     # daemons
     pin_proc_on_pwr "crtc_commit"
     pin_proc_on_pwr "crtc_event"
-    pin_proc_on_pwr "ueventd"
     pin_proc_on_pwr "netd"
     pin_proc_on_pwr "mdnsd"
     pin_proc_on_pwr "pdnsd"
@@ -45,27 +46,29 @@ unify_cgroup()
     change_task_affinity "android\.system\.suspend" "7f"
     # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "\.hardware\."
+    change_task_affinity "\.hardware\." "ff"
     # pwr cluster has enough capacity for surfaceflinger
     pin_proc_on_pwr "surfaceflinger"
     # MediaProvider is background service
     pin_proc_on_pwr "android\.process\.media"
-    pin_proc_on_mid "com\.android\.providers\.media"
+    unpin_proc "com\.android\.providers\.media"
+    change_task_affinity "com\.android\.providers\.media" "7f"
     # com.miui.securitycenter & com.miui.securityadd
     pin_proc_on_pwr "miui\.security"
+    # ueventd related to hotplug of camera, wifi, usb... 
+    # pin_proc_on_pwr "ueventd"
 
     # system_server blacklist
     pin_proc_on_mid "system_server"
     # input dispatcher
     change_thread_high_prio "system_server" "input"
-    # transition animation
-    change_thread_rt "system_server" "android\.ui" "1"
-    change_thread_rt "system_server" "android\.display" "1"
+    # related to camera startup
+    unpin_thread "system_server" "ProcessManager"
     # not important
     pin_thread_on_pwr "system_server" "Miui"
     pin_thread_on_pwr "system_server" "Connect"
     pin_thread_on_pwr "system_server" "Network"
     pin_thread_on_pwr "system_server" "Wifi"
-    pin_thread_on_pwr "system_server" "Async"
     pin_thread_on_pwr "system_server" "backup"
     pin_thread_on_pwr "system_server" "Greezer"
     pin_thread_on_pwr "system_server" "TaskSnapshot"
@@ -78,6 +81,9 @@ unify_cgroup()
     pin_thread_on_pwr "system_server" "Thread-"
     pin_thread_on_pwr "system_server" "pool-"
     pin_thread_on_pwr "system_server" "Jit thread pool"
+    pin_thread_on_pwr "system_server" "CachedAppOpt"
+    pin_thread_on_mid "system_server" "NetworkStats" # it blocks binders
+    # pin_thread_on_pwr "system_server" "Async" # it blocks camera
     # pin_thread_on_pwr "system_server" "\.bg" # it blocks binders
     # do not let GC thread block system_server
     # pin_thread_on_mid "system_server" "HeapTaskDaemon"
@@ -92,11 +98,15 @@ unify_cgroup()
     # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
     # perf will automatically set self to prio=100
     unpin_proc "\.hardware\.perf"
+    change_task_affinity "\.hardware\.perf" "7f"
     # fix laggy bilibili feed scrolling
     change_task_cgroup "android\.phone" "foreground" "cpuset"
     change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
-    # sometimes surfaceflinger has quite high load
-    change_thread_cgroup "surfaceflinger" "surfaceflinger" "top-app" "cpuset"
+    # sometimes surfaceflinger main thread has quite high load
+    change_task_rt "surfaceflinger" "4"
+    change_main_thread_cgroup "surfaceflinger" "top-app" "cpuset"
+    change_main_thread_cgroup "surfaceflinger" "top-app" "stune"
+    change_main_thread_cgroup "surfaceflinger" "top-app" "cpuctl"
     pin_thread_on_mid "surfaceflinger" "app"
     # let UX related Binders run with top-app
     change_thread_cgroup "surfaceflinger" "^Binder" "top-app" "cpuset"
@@ -104,13 +114,20 @@ unify_cgroup()
     change_thread_cgroup "system_server" "^Binder" "top-app" "stune"
     change_thread_cgroup "system_server" "^Binder" "top-app" "cpuctl"
     change_thread_cgroup "\.hardware\.display" "^Binder" "top-app" "cpuset"
+    change_thread_cgroup "\.hardware\.display" "^HwBinder" "top-app" "cpuset"
     change_thread_cgroup "\.composer" "^Binder" "top-app" "cpuset"
     # transition animation
     change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android\.anim" "top-app" "stune"
+    change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuctl"
+    change_thread_cgroup "system_server" "android\.display" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android\.display" "top-app" "stune"
+    change_thread_cgroup "system_server" "android\.display" "top-app" "cpuctl"
+    change_thread_cgroup "system_server" "android\.ui" "top-app" "cpuset"
 
     # Heavy Scene Boost
     # camera & video recording
-    pin_proc_on_mid "\.hardware\.camera"
+    unpin_proc "\.hardware\.camera"
     pin_proc_on_mid "^camera"
     pin_proc_on_mid "\.hardware\.audio"
     pin_proc_on_mid "^audio"
@@ -118,8 +135,8 @@ unify_cgroup()
     pin_proc_on_perf "\.hardware\.biometrics\.fingerprint"
     change_task_high_prio "\.hardware\.biometrics\.fingerprint"
     # mfp-daemon: goodix in-screen fingerprint daemon
-    pin_proc_on_perf "mfp-daemon"
-    change_task_high_prio "mfp-daemon"
+    pin_proc_on_perf "mfp"
+    change_task_high_prio "mfp"
     # boost app boot process, zygote--com.xxxx.xxx
     unpin_proc "zygote"
     change_task_high_prio "zygote"
@@ -161,23 +178,6 @@ unify_cpufreq()
     set_governor_param "interactive/timer_slack" "0:12345678 2:12345678 4:12345678"
 }
 
-unify_gpufreq()
-{
-    # save ~100mw under light 3D workload
-    lock_val "0" $KSGL/force_no_nap
-    lock_val "1" $KSGL/bus_split
-    lock_val "0" $KSGL/force_bus_on
-    lock_val "0" $KSGL/force_clk_on
-    lock_val "0" $KSGL/force_rail_on
-
-    # unlock mtk gpu strict limit
-    lock_val "1" /sys/module/ged/parameters/gpu_dvfs
-    lock_val "1" /sys/module/ged/parameters/gx_game_mode
-    lock_val "0" /sys/module/ged/parameters/gx_3d_benchmark_on
-    lock_val "1" /proc/mali/dvfs_enable
-    lock_val "0" /proc/gpufreq/gpufreq_opp_freq
-}
-
 unify_sched()
 {
     # disable sched global placement boost
@@ -187,6 +187,7 @@ unify_sched()
     lock_val "1000" $SCHED/sched_min_task_util_for_colocation
     lock_val "0" $SCHED/sched_conservative_pl
     lock_val "0" $SCHED/sched_force_lb_enable
+    lock_val "0" $SCHED/walt_low_latency_task_threshold
 
     # scheduler boost for top app main from msm kernel 4.19
     lock_val "0" $SCHED/sched_boost_top_app
@@ -202,9 +203,9 @@ unify_sched()
 
     # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
-    # However in EAS model A76's efficiency is 1.7x of A55's, so the migrate thresholds need compensate.
-    set_sched_migrate "50" "25" "999" "888"
-    set_sched_migrate "50 90" "25 50" "999" "888"
+    # However in EAS model A76's efficiency is 1.7x of A55's, so the down migrate threshold need compensate.
+    set_sched_migrate "90" "15" "999" "888"
+    set_sched_migrate "90 90" "15 50" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -217,13 +218,15 @@ unify_lpm()
     lock_val "0" $LPM/sleep_disabled
     lock_val "0" $LPM/lpm_ipi_prediction
     if [ -f "$LPM/bias_hyst" ]; then
-        lock_val "1" $LPM/bias_hyst
+        lock_val "2" $LPM/bias_hyst
         lock_val "0" $LPM/lpm_prediction
     else
         lock_val "1" $LPM/lpm_prediction
     fi
     lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
-    lock_val "1000000" $SCHED/sched_busy_hyst_ns
+    lock_val "2000000" $SCHED/sched_busy_hyst_ns
+    # but ignore coloc
+    lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
 }
 
 disable_hotplug()
@@ -365,7 +368,6 @@ disable_userspace_boost
 disable_kernel_boost
 disable_hotplug
 unify_cpufreq
-unify_gpufreq
 unify_sched
 unify_lpm
 

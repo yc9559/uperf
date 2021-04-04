@@ -317,6 +317,9 @@ _get_cfgname()
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
+    "universal2100") ret="e2100" ;;
+    "universal1080") ret="e1080" ;;
+    "universal990")  ret="e990" ;;
     "universal9825") ret="e9820" ;;
     "universal9820") ret="e9820" ;;
     "universal9810") ret="e9810" ;;
@@ -339,7 +342,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.03.14)"
+    echo "* Version: v2 (21.04.04)"
     echo ""
 }
 
@@ -426,7 +429,8 @@ powerhal_stub_install()
     _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.cfg" 0 0 0755 u:object_r:vendor_configs_file:s0
     _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/targetconfig.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
 }
 
 uperf_print_banner
