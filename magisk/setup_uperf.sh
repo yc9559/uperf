@@ -317,6 +317,9 @@ _get_cfgname()
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
+    "exynos2100")    ret="e2100" ;;
+    "exynos1080")    ret="e1080" ;;
+    "exynos990")     ret="e990" ;;
     "universal2100") ret="e2100" ;;
     "universal1080") ret="e1080" ;;
     "universal990")  ret="e990" ;;
@@ -342,7 +345,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.04.04)"
+    echo "* Version: v2 (21.04.11)"
     echo ""
 }
 
@@ -369,7 +372,6 @@ uperf_install()
 
     mkdir -p $USER_PATH
     if [ "$cfgname" != "unsupported" ] && [ -f $BASEDIR/config/$cfgname.json ]; then
-        echo "- Use $cfgname.json"
         _setup_platform_file "$cfgname"
     else
         _abort "! [$target] not supported."

@@ -2,7 +2,7 @@
 # Powercfg Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210124
+# Version: 20210411
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -25,12 +25,6 @@ DEVFREQ="/sys/class/devfreq"
 LPM="/sys/module/lpm_levels/parameters"
 MSM_PERF="/sys/module/msm_performance/parameters"
 SDA_Q="/sys/block/sda/queue"
-
-if [ "$(match_linux_version 4.19)" != "" ]; then
-    CPU_BOOST="/sys/devices/system/cpu/cpu_boost/parameters"
-else
-    CPU_BOOST="/sys/module/cpu_boost/parameters"
-fi
 
 ###############################
 # Powermodes helper functions

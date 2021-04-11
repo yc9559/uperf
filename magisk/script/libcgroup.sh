@@ -2,7 +2,7 @@
 # Cgroup Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210204
+# Version: 20210405
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -28,6 +28,7 @@ BASEDIR="$(dirname "$0")"
 change_task_cgroup()
 {
     local ps_ret
+    local comm
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
@@ -42,6 +43,7 @@ change_task_cgroup()
 change_proc_cgroup()
 {
     local ps_ret
+    local comm
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         comm="$(cat /proc/$temp_pid/comm)"
@@ -54,6 +56,7 @@ change_proc_cgroup()
 change_thread_cgroup()
 {
     local ps_ret
+    local comm
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
@@ -70,6 +73,7 @@ change_thread_cgroup()
 change_main_thread_cgroup()
 {
     local ps_ret
+    local comm
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         comm="$(cat /proc/$temp_pid/comm)"
@@ -82,6 +86,7 @@ change_main_thread_cgroup()
 change_task_affinity()
 {
     local ps_ret
+    local comm
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
@@ -116,7 +121,27 @@ change_task_nice()
     ps_ret="$(ps -Ao pid,args)"
     for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
         for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            renice "$2" -p "$temp_tid" >> $LOG_FILE
+            renice -n +40 -p "$temp_tid"
+            renice -n -19 -p "$temp_tid"
+            renice -n "$2" -p "$temp_tid"
+        done
+    done
+}
+
+# $1:task_name $2:thread_name $3:nice(relative to 120)
+change_thread_nice()
+{
+    local ps_ret
+    local comm
+    ps_ret="$(ps -Ao pid,args)"
+    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
+            if [ "$(echo $comm | grep -i "$2")" != "" ]; then
+                renice -n +40 -p "$temp_tid"
+                renice -n -19 -p "$temp_tid"
+                renice -n "$3" -p "$temp_tid"
+            fi
         done
     done
 }
@@ -155,34 +180,15 @@ change_thread_rt()
 # $1:task_name
 change_task_high_prio()
 {
-    local ps_ret
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            # audio thread nice <= -16
-            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
-            log "change $1/$comm($temp_tid) -> Nice -15"
-            renice -n -15 -p "$temp_tid" >> $LOG_FILE
-        done
-    done
+    # audio thread nice <= -16
+    change_task_nice "$1" "-15"
 }
 
 # $1:task_name $2:thread_name
 change_thread_high_prio()
 {
-    local ps_ret
-    local comm
-    ps_ret="$(ps -Ao pid,args)"
-    for temp_pid in $(echo "$ps_ret" | grep -i "$1" | awk '{print $1}'); do
-        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
-            if [ "$(echo $comm | grep -i "$2")" != "" ]; then
-                # audio thread nice <= -16
-                log "change $1/$comm($temp_tid) -> Nice -15"
-                renice -n -15 -p "$temp_tid" >> $LOG_FILE
-            fi
-        done
-    done
+    # audio thread nice <= -16
+    change_thread_nice "$1" "$2" "-15"
 }
 
 # $1:task_name $2:thread_name

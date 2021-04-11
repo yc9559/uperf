@@ -27,10 +27,9 @@ unify_cgroup()
         done
     done
 
-    # launcher is usually in foreground group
-    lock_val "$(cat /dev/cpuset/foreground/cpus),7" /dev/cpuset/foreground/cpus
-    lock_val "$(cat /dev/cpuset/foreground/cpus)" /dev/cpuset/foreground/boost/cpus
-    lock /dev/cpuset/foreground/cpus
+    # launcher is usually in foreground group, uperf will take care of them
+    lock_val "0-7" /dev/cpuset/foreground/boost/cpus
+    lock_val "0-7" /dev/cpuset/foreground/cpus
     # VMOS may set cpuset/background/cpus to "0"
     lock /dev/cpuset/background/cpus
 
@@ -38,6 +37,7 @@ unify_cgroup()
     # daemons
     pin_proc_on_pwr "crtc_commit"
     pin_proc_on_pwr "crtc_event"
+    pin_proc_on_pwr "pp_event"
     pin_proc_on_pwr "netd"
     pin_proc_on_pwr "mdnsd"
     pin_proc_on_pwr "pdnsd"
@@ -52,7 +52,8 @@ unify_cgroup()
     # MediaProvider is background service
     pin_proc_on_pwr "android\.process\.media"
     unpin_proc "com\.android\.providers\.media"
-    change_task_affinity "com\.android\.providers\.media" "7f"
+    change_thread_nice "com\.android\.providers\.media" "Thread-" "4"
+    change_thread_affinity "com\.android\.providers\.media" "Thread-" "f"
     # com.miui.securitycenter & com.miui.securityadd
     pin_proc_on_pwr "miui\.security"
     # ueventd related to hotplug of camera, wifi, usb... 
@@ -63,16 +64,14 @@ unify_cgroup()
     # input dispatcher
     change_thread_high_prio "system_server" "input"
     # related to camera startup
-    unpin_thread "system_server" "ProcessManager"
+    change_thread_affinity "system_server" "ProcessManager" "ff"
     # not important
     pin_thread_on_pwr "system_server" "Miui"
+    pin_thread_on_pwr "system_server" "ActivityManager"
     pin_thread_on_pwr "system_server" "Connect"
     pin_thread_on_pwr "system_server" "Network"
     pin_thread_on_pwr "system_server" "Wifi"
     pin_thread_on_pwr "system_server" "backup"
-    pin_thread_on_pwr "system_server" "Greezer"
-    pin_thread_on_pwr "system_server" "TaskSnapshot"
-    pin_thread_on_pwr "system_server" "Oom"
     pin_thread_on_pwr "system_server" "Sync"
     pin_thread_on_pwr "system_server" "Observer"
     pin_thread_on_pwr "system_server" "Power"
@@ -82,7 +81,12 @@ unify_cgroup()
     pin_thread_on_pwr "system_server" "pool-"
     pin_thread_on_pwr "system_server" "Jit thread pool"
     pin_thread_on_pwr "system_server" "CachedAppOpt"
-    pin_thread_on_mid "system_server" "NetworkStats" # it blocks binders
+    pin_thread_on_pwr "system_server" "Greezer"
+    pin_thread_on_pwr "system_server" "TaskSnapshot"
+    pin_thread_on_pwr "system_server" "Oom"
+    change_thread_nice "system_server" "Greezer" "4"
+    change_thread_nice "system_server" "TaskSnapshot" "4"
+    change_thread_nice "system_server" "Oom" "4"
     # pin_thread_on_pwr "system_server" "Async" # it blocks camera
     # pin_thread_on_pwr "system_server" "\.bg" # it blocks binders
     # do not let GC thread block system_server
@@ -93,14 +97,14 @@ unify_cgroup()
     # speed up searching service binder
     change_task_cgroup "servicemanag" "top-app" "cpuset"
     # prevent display service from being preempted by normal tasks
+    # vendor.qti.hardware.display.allocator-service cannot be set to RT policy, will be reset to 120
+    unpin_proc "\.hardware\.display"
     change_task_rt "\.hardware\.display" "2"
     change_task_rt "\.composer" "2"
     # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
     # perf will automatically set self to prio=100
     unpin_proc "\.hardware\.perf"
-    change_task_affinity "\.hardware\.perf" "7f"
     # fix laggy bilibili feed scrolling
-    change_task_cgroup "android\.phone" "foreground" "cpuset"
     change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
     # sometimes surfaceflinger main thread has quite high load
     change_task_rt "surfaceflinger" "4"
@@ -132,8 +136,8 @@ unify_cgroup()
     pin_proc_on_mid "\.hardware\.audio"
     pin_proc_on_mid "^audio"
     # provide best performance for fingerprint service
-    pin_proc_on_perf "\.hardware\.biometrics\.fingerprint"
-    change_task_high_prio "\.hardware\.biometrics\.fingerprint"
+    pin_proc_on_perf "\.hardware\.biometrics\."
+    change_task_high_prio "\.hardware\.biometrics\."
     # mfp-daemon: goodix in-screen fingerprint daemon
     pin_proc_on_perf "mfp"
     change_task_high_prio "mfp"
@@ -146,7 +150,7 @@ unify_cgroup()
 
     # busybox fork from magiskd
     pin_proc_on_mid "magiskd"
-    change_task_nice "magiskd" "10"
+    change_task_nice "magiskd" "39"
 }
 
 unify_cpufreq()
@@ -158,14 +162,21 @@ unify_cpufreq()
     # stop sched core_ctl, game's main thread need be pinned on prime core
     set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
 
+    # clear cpu load scale factor
+    for i in 0 1 2 3 4 5 6 7 8 9; do
+        lock_val "0" $CPU/cpu$i/sched_load_boost
+    done
+
     # unify governor, use schedutil if kernel has it
     set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
     set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
 
     # unify walt schedutil governor
-    set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
-    set_governor_param "schedutil/hispeed_load" "0:100 2:100 4:100 6:100 7:100"
-    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
+    set_governor_param "schedutil/hispeed_freq" "0:1200000 2:1200000 4:1200000 6:1200000 7:1200000"
+    set_governor_param "schedutil/hispeed_freq" "0:1000000"
+    set_governor_param "schedutil/hispeed_load" "0:70 2:70 4:70 6:70 7:70"
+    set_governor_param "schedutil/pl" "0:0 2:0 4:0 6:0 7:0"
+    set_governor_param "schedutil/pl" "7:1"
 
     # unify hmp interactive governor, only 2+2 4+2 4+4
     set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
@@ -187,9 +198,6 @@ unify_sched()
     lock_val "1000" $SCHED/sched_min_task_util_for_colocation
     lock_val "0" $SCHED/sched_conservative_pl
     lock_val "0" $SCHED/sched_force_lb_enable
-    lock_val "0" $SCHED/walt_low_latency_task_threshold
-
-    # scheduler boost for top app main from msm kernel 4.19
     lock_val "0" $SCHED/sched_boost_top_app
 
     # unify WALT HMP sched
@@ -204,8 +212,8 @@ unify_sched()
     # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the down migrate threshold need compensate.
-    set_sched_migrate "90" "15" "999" "888"
-    set_sched_migrate "90 90" "15 50" "999" "888"
+    set_sched_migrate "40" "20" "999" "888"
+    set_sched_migrate "40 80" "20 40" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -215,18 +223,20 @@ unify_sched()
 unify_lpm()
 {
     # enter C-state level 3 took ~500us
+    # Qualcomm C-state ctrl
     lock_val "0" $LPM/sleep_disabled
     lock_val "0" $LPM/lpm_ipi_prediction
     if [ -f "$LPM/bias_hyst" ]; then
         lock_val "2" $LPM/bias_hyst
         lock_val "0" $LPM/lpm_prediction
+    elif [ -f "$SCHED/sched_busy_hyst_ns" ]; then
+        lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
+        lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
+        lock_val "2000000" $SCHED/sched_busy_hyst_ns
+        lock_val "0" $LPM/lpm_prediction
     else
         lock_val "1" $LPM/lpm_prediction
     fi
-    lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
-    lock_val "2000000" $SCHED/sched_busy_hyst_ns
-    # but ignore coloc
-    lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
 }
 
 disable_hotplug()
@@ -256,7 +266,9 @@ disable_kernel_boost()
 {
     # Qualcomm
     lock_val "0" /sys/devices/system/cpu/cpu_boost/parameters/input_boost_ms
+    lock_val "0" /sys/devices/system/cpu/cpu_boost/parameters/powerkey_input_boost_ms
     lock_val "0" /sys/devices/system/cpu/cpu_boost/input_boost_ms
+    lock_val "0" /sys/devices/system/cpu/cpu_boost/powerkey_input_boost_ms
     lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms
     lock_val "0" /sys/module/msm_performance/parameters/touchboost
     lock_val "0" /sys/module/cpu_boost/parameters/boost_ms
