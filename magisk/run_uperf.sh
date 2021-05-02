@@ -7,6 +7,9 @@
 BASEDIR="$(dirname $(readlink -f "$0"))"
 SCRIPT_DIR="$BASEDIR/script"
 
+# create busybox symlinks
+$BASEDIR/bin/busybox/busybox --install -s $BASEDIR/bin/busybox/
+
 # support vtools
 cp -af $SCRIPT_DIR/vtools-powercfg.sh /data/powercfg.sh
 cp -af $SCRIPT_DIR/vtools-powercfg.sh /data/powercfg-base.sh

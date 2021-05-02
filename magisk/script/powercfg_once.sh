@@ -30,6 +30,7 @@ unify_cgroup()
     # launcher is usually in foreground group, uperf will take care of them
     lock_val "0-7" /dev/cpuset/foreground/boost/cpus
     lock_val "0-7" /dev/cpuset/foreground/cpus
+    lock_val "0-6" /dev/cpuset/restricted/cpus
     # VMOS may set cpuset/background/cpus to "0"
     lock /dev/cpuset/background/cpus
 
@@ -37,27 +38,38 @@ unify_cgroup()
     # daemons
     pin_proc_on_pwr "crtc_commit"
     pin_proc_on_pwr "crtc_event"
-    pin_proc_on_pwr "pp_event"
+    pin_proc_on_pwr "pp_event" 
+    pin_proc_on_pwr "msm_irqbalance" 
     pin_proc_on_pwr "netd"
     pin_proc_on_pwr "mdnsd"
     pin_proc_on_pwr "pdnsd"
     pin_proc_on_pwr "analytics"
-    pin_proc_on_pwr "daemon"
-    change_task_affinity "android\.system\.suspend" "7f"
-    # hardware services, eg. android.hardware.sensors@1.0-service
-    pin_proc_on_pwr "\.hardware\."
-    change_task_affinity "\.hardware\." "ff"
-    # pwr cluster has enough capacity for surfaceflinger
-    pin_proc_on_pwr "surfaceflinger"
-    # MediaProvider is background service
-    pin_proc_on_pwr "android\.process\.media"
-    unpin_proc "com\.android\.providers\.media"
-    change_thread_nice "com\.android\.providers\.media" "Thread-" "4"
-    change_thread_affinity "com\.android\.providers\.media" "Thread-" "f"
-    # com.miui.securitycenter & com.miui.securityadd
-    pin_proc_on_pwr "miui\.security"
+    pin_proc_on_pwr "imsdaemon"
+    pin_proc_on_pwr "cnss-daemon"
+    pin_proc_on_pwr "qadaemon"
+    pin_proc_on_pwr "ATFWD-daemon"
+    pin_proc_on_pwr "ims_rtp_daemon"
+    change_task_affinity "android.system.suspend" "7f"
     # ueventd related to hotplug of camera, wifi, usb... 
     # pin_proc_on_pwr "ueventd"
+    # hardware services, eg. android.hardware.sensors@1.0-service
+    pin_proc_on_pwr "android.hardware.bluetooth"
+    pin_proc_on_pwr "android.hardware.gnss"
+    pin_proc_on_pwr "android.hardware.health"
+    pin_proc_on_pwr "android.hardware.sensors"
+    pin_proc_on_pwr "android.hardware.thermal"
+    pin_proc_on_pwr "android.hardware.wifi"
+    pin_proc_on_pwr "vendor.qti.hardware.qseecom"
+    # pwr cluster has enough capacity for surfaceflinger
+    pin_proc_on_pwr "surfaceflinger"
+    # com.android.providers.media.module controlled by uperf
+    pin_proc_on_pwr "android.process.media"
+    # com.miui.securitycenter & com.miui.securityadd
+    pin_proc_on_pwr "miui\.security"
+    # provide best performance for fingerprint service
+    change_task_nice "\.hardware\.biometrics\." "-4"
+    # mfp-daemon: goodix in-screen fingerprint daemon
+    change_task_nice "mfp" "-4"
 
     # system_server blacklist
     pin_proc_on_mid "system_server"
@@ -67,7 +79,6 @@ unify_cgroup()
     change_thread_affinity "system_server" "ProcessManager" "ff"
     # not important
     pin_thread_on_pwr "system_server" "Miui"
-    pin_thread_on_pwr "system_server" "ActivityManager"
     pin_thread_on_pwr "system_server" "Connect"
     pin_thread_on_pwr "system_server" "Network"
     pin_thread_on_pwr "system_server" "Wifi"
@@ -121,26 +132,15 @@ unify_cgroup()
     change_thread_cgroup "\.hardware\.display" "^HwBinder" "top-app" "cpuset"
     change_thread_cgroup "\.composer" "^Binder" "top-app" "cpuset"
     # transition animation
-    change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "android\.anim" "top-app" "stune"
-    change_thread_cgroup "system_server" "android\.anim" "top-app" "cpuctl"
-    change_thread_cgroup "system_server" "android\.display" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "android\.display" "top-app" "stune"
-    change_thread_cgroup "system_server" "android\.display" "top-app" "cpuctl"
-    change_thread_cgroup "system_server" "android\.ui" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android.anim" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android.anim" "top-app" "stune"
+    change_thread_cgroup "system_server" "android.anim" "top-app" "cpuctl"
+    change_thread_cgroup "system_server" "android.display" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android.display" "top-app" "stune"
+    change_thread_cgroup "system_server" "android.display" "top-app" "cpuctl"
+    change_thread_cgroup "system_server" "android.ui" "top-app" "cpuset"
 
     # Heavy Scene Boost
-    # camera & video recording
-    unpin_proc "\.hardware\.camera"
-    pin_proc_on_mid "^camera"
-    pin_proc_on_mid "\.hardware\.audio"
-    pin_proc_on_mid "^audio"
-    # provide best performance for fingerprint service
-    pin_proc_on_perf "\.hardware\.biometrics\."
-    change_task_high_prio "\.hardware\.biometrics\."
-    # mfp-daemon: goodix in-screen fingerprint daemon
-    pin_proc_on_perf "mfp"
-    change_task_high_prio "mfp"
     # boost app boot process, zygote--com.xxxx.xxx
     unpin_proc "zygote"
     change_task_high_prio "zygote"
@@ -150,7 +150,7 @@ unify_cgroup()
 
     # busybox fork from magiskd
     pin_proc_on_mid "magiskd"
-    change_task_nice "magiskd" "39"
+    change_task_nice "magiskd" "19"
 }
 
 unify_cpufreq()
@@ -172,11 +172,9 @@ unify_cpufreq()
     set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
 
     # unify walt schedutil governor
-    set_governor_param "schedutil/hispeed_freq" "0:1200000 2:1200000 4:1200000 6:1200000 7:1200000"
-    set_governor_param "schedutil/hispeed_freq" "0:1000000"
-    set_governor_param "schedutil/hispeed_load" "0:70 2:70 4:70 6:70 7:70"
-    set_governor_param "schedutil/pl" "0:0 2:0 4:0 6:0 7:0"
-    set_governor_param "schedutil/pl" "7:1"
+    set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
+    set_governor_param "schedutil/hispeed_load" "0:100 2:100 4:100 6:100 7:100"
+    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
 
     # unify hmp interactive governor, only 2+2 4+2 4+4
     set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
@@ -212,8 +210,8 @@ unify_sched()
     # place a little heavier processes on big cluster, due to Cortex-A55 poor efficiency
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the down migrate threshold need compensate.
-    set_sched_migrate "40" "20" "999" "888"
-    set_sched_migrate "40 80" "20 40" "999" "888"
+    set_sched_migrate "50" "15" "999" "888"
+    set_sched_migrate "50 90" "15 60" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -358,7 +356,7 @@ disable_userspace_boost()
 
     # Qualcomm&MTK perfhal
     # keep perfhal running with empty config file in magisk mode
-    [ "$(is_magisk)" == "false" ] && perfhal_stop
+    [ ! -f "$FLAGS/enable_perfhal_stub" ] && perfhal_stop
 
     # xiaomi perfservice
     stop vendor.perfservice

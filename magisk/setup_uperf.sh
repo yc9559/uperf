@@ -312,6 +312,7 @@ _get_cfgname()
     "sdm660")        ret="$(_get_sdm660_type)" ;;
     "sdm636")        ret="$(_get_sdm636_type)" ;;
     "trinket")       ret="sdm665" ;;
+    "bengal")        ret="sdm665" ;; # sdm662
     "msm8976")       ret="sdm652" ;;
     "msm8956")       ret="sdm650" ;;
     "msm8998")       ret="$(_get_sdm835_type)" ;;
@@ -329,6 +330,7 @@ _get_cfgname()
     "universal8895") ret="$(_get_e8895_type)" ;;
     "universal8890") ret="$(_get_e8890_type)" ;;
     "universal7420") ret="e7420" ;;
+    "mt6768")        ret="mtg80" ;; # Helio P65(mt6768)/G70(mt6769v)/G80(mt6769t)/G85(mt6769z)
     "mt6785")        ret="mtg90t" ;;
     "mt6853")        ret="$(_get_mt6853_type)" ;;
     "mt6873")        ret="$(_get_mt6873_type)" ;;
@@ -345,7 +347,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.04.11)"
+    echo "* Version: v2 (21.05.02)"
     echo ""
 }
 
@@ -396,6 +398,8 @@ uperf_install()
 injector_install()
 {
     echo "- Installing injector"
+    echo "- SELinux will be set to PERMISSIVE at boot for better compatibility"
+    echo "- ...delete \$MODDIR/flags/selinux_permissive to leave SELinux untouched."
 
     local src_path
     local dst_path
@@ -418,9 +422,6 @@ injector_install()
     # in case of set_perm_recursive is broken
     chmod 0755 $BASEDIR/bin/*
 
-    # create injector enable flag
-    touch $BASEDIR/enable_injector
-
     rm -rf $BASEDIR/injector
 }
 
@@ -435,9 +436,28 @@ powerhal_stub_install()
     _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
 }
 
+busybox_install()
+{
+    echo "- Installing private busybox"
+
+    local dst_path
+    dst_path="$BASEDIR/bin/busybox/"
+
+    mkdir -p "$dst_path"
+    if [ "$(_is_aarch64)" == "true" ]; then
+        cp "$BASEDIR/busybox/busybox-arm64-selinux" "$dst_path/busybox"
+    else
+        cp "$BASEDIR/busybox/busybox-arm-selinux" "$dst_path/busybox"
+    fi
+    chmod 0755 "$dst_path/busybox"
+
+    rm -rf $BASEDIR/busybox
+}
+
 uperf_print_banner
 uperf_install
 injector_install
 powerhal_stub_install
+busybox_install
 uperf_print_finish
 exit 0

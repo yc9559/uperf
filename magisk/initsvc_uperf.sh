@@ -15,14 +15,28 @@ wait_until_login()
 
     # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
     local test_file="/sdcard/Android/.PERMISSION_TEST"
-    touch "$test_file"
+    true > "$test_file"
     while [ ! -f "$test_file" ]; do
-        touch "$test_file"
+        true > "$test_file"
         sleep 1
     done
     rm "$test_file"
 }
 
+crash_recuser()
+{
+    local logcat_pid
+
+    true > $BASEDIR/disable
+    logcat -f $BASEDIR/logcat.log &
+    logcat_pid=$!
+
+    sleep 60
+
+    rm -f $BASEDIR/disable
+    kill -9 $logcat_pid
+}
+
+(crash_recuser &)
 wait_until_login
-# do not sleep 60, may causing MIUI 12 launcher freezed by sfanalysis
 sh $BASEDIR/run_uperf.sh

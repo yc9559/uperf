@@ -51,15 +51,11 @@ inj_do_inject()
 
 inj_start()
 {
-    # raise inotify limit
-    lock_val "131072" /proc/sys/fs/inotify/max_queued_events
-    lock_val "131072" /proc/sys/fs/inotify/max_user_watches
-    lock_val "1024" /proc/sys/fs/inotify/max_user_instances
-
     log "$(date '+%Y-%m-%d %H:%M:%S')"
-    inj_do_inject "/system/bin/surfaceflinger" "libsfanalysis.so" "SfAnalysis"
-    inj_do_inject "system_server" "libssanalysis.so" "SsAnalysis"
+    [ -f "$FLAGS/selinux_permissive" ] && setenforce 0
+    [ -f "$FLAGS/enable_sfanalysis" ] && inj_do_inject "/system/bin/surfaceflinger" "libsfanalysis.so" "SfAnalysis"
+    [ -f "$FLAGS/enable_ssanalysis" ] && inj_do_inject "system_server" "libssanalysis.so" "SsAnalysis"
 }
 
 clear_log
-[ -f "$MODULE_PATH/enable_injector" ] && inj_start
+inj_start

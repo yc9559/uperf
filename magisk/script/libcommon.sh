@@ -84,9 +84,9 @@ wait_until_login()
 
     # we doesn't have the permission to rw "/sdcard" before the user unlocks the screen
     local test_file="/sdcard/Android/.PERMISSION_TEST"
-    touch "$test_file"
+    true > "$test_file"
     while [ ! -f "$test_file" ]; do
-        touch "$test_file"
+        true > "$test_file"
         sleep 1
     done
     rm "$test_file"
