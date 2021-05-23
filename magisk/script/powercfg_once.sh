@@ -28,8 +28,8 @@ unify_cgroup()
     done
 
     # launcher is usually in foreground group, uperf will take care of them
-    lock_val "0-7" /dev/cpuset/foreground/boost/cpus
-    lock_val "0-7" /dev/cpuset/foreground/cpus
+    lock_val "1-7" /dev/cpuset/foreground/boost/cpus
+    lock_val "1-7" /dev/cpuset/foreground/cpus
     lock_val "0-6" /dev/cpuset/restricted/cpus
     # VMOS may set cpuset/background/cpus to "0"
     lock /dev/cpuset/background/cpus
@@ -110,8 +110,8 @@ unify_cgroup()
     # prevent display service from being preempted by normal tasks
     # vendor.qti.hardware.display.allocator-service cannot be set to RT policy, will be reset to 120
     unpin_proc "\.hardware\.display"
+    change_task_affinity "\.hardware\.display" "7f"
     change_task_rt "\.hardware\.display" "2"
-    change_task_rt "\.composer" "2"
     # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
     # perf will automatically set self to prio=100
     unpin_proc "\.hardware\.perf"
@@ -139,6 +139,7 @@ unify_cgroup()
     change_thread_cgroup "system_server" "android.display" "top-app" "stune"
     change_thread_cgroup "system_server" "android.display" "top-app" "cpuctl"
     change_thread_cgroup "system_server" "android.ui" "top-app" "cpuset"
+    change_thread_cgroup "system_server" "android.bg" "top-app" "cpuset"
 
     # Heavy Scene Boost
     # boost app boot process, zygote--com.xxxx.xxx
@@ -191,7 +192,6 @@ unify_sched()
 {
     # disable sched global placement boost
     lock_val "0" $SCHED/sched_boost
-    lock_val "0" $SCHED/sched_walt_rotate_big_tasks
     lock_val "1000" $SCHED/sched_min_task_util_for_boost
     lock_val "1000" $SCHED/sched_min_task_util_for_colocation
     lock_val "0" $SCHED/sched_conservative_pl
@@ -211,7 +211,7 @@ unify_sched()
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the down migrate threshold need compensate.
     set_sched_migrate "50" "15" "999" "888"
-    set_sched_migrate "50 90" "15 60" "999" "888"
+    set_sched_migrate "50 90" "15 70" "999" "888"
 
     # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # system_server binders maybe pinned on perf cluster due to this
@@ -225,12 +225,12 @@ unify_lpm()
     lock_val "0" $LPM/sleep_disabled
     lock_val "0" $LPM/lpm_ipi_prediction
     if [ -f "$LPM/bias_hyst" ]; then
-        lock_val "2" $LPM/bias_hyst
+        lock_val "10" $LPM/bias_hyst
         lock_val "0" $LPM/lpm_prediction
     elif [ -f "$SCHED/sched_busy_hyst_ns" ]; then
         lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
         lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
-        lock_val "2000000" $SCHED/sched_busy_hyst_ns
+        lock_val "10000000" $SCHED/sched_busy_hyst_ns
         lock_val "0" $LPM/lpm_prediction
     else
         lock_val "1" $LPM/lpm_prediction

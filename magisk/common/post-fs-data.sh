@@ -25,18 +25,11 @@ remove_unnecessary_overlay()
     done
 }
 
-remove_all_overlay()
-{
-    rm -rf "$MODDIR/system/vendor/etc"
-}
-
-crash_recuser()
-{
-    true > $MODDIR/flags/crash_on_postfs
-    sleep 30
-    rm -f $MODDIR/flags/crash_on_postfs
-}
+if [ -f "$MODDIR/flags/.need_recuser" ]; then
+    rm -f $MODDIR/flags/.need_recuser
+    true > $MODDIR/disable
+else
+    true > $MODDIR/flags/.need_recuser
+fi
 
 remove_unnecessary_overlay
-[ -f "$MODDIR/flags/crash_on_postfs" ] && remove_all_overlay
-(crash_recuser &)

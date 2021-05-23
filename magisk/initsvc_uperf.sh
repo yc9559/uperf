@@ -25,16 +25,10 @@ wait_until_login()
 
 crash_recuser()
 {
-    local logcat_pid
-
-    true > $BASEDIR/disable
     logcat -f $BASEDIR/logcat.log &
-    logcat_pid=$!
-
     sleep 60
-
-    rm -f $BASEDIR/disable
-    kill -9 $logcat_pid
+    kill -9 $!
+    rm -f $BASEDIR/flags/.need_recuser
 }
 
 (crash_recuser &)

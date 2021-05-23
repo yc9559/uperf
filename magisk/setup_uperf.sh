@@ -347,7 +347,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.05.02)"
+    echo "* Version: v2 (21.05.23)"
     echo ""
 }
 
