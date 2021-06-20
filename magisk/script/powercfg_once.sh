@@ -36,68 +36,36 @@ unify_cgroup()
 
     # Reduce Perf Cluster Wakeup
     # daemons
-    pin_proc_on_pwr "crtc_commit"
-    pin_proc_on_pwr "crtc_event"
-    pin_proc_on_pwr "pp_event" 
-    pin_proc_on_pwr "msm_irqbalance" 
-    pin_proc_on_pwr "netd"
-    pin_proc_on_pwr "mdnsd"
-    pin_proc_on_pwr "pdnsd"
-    pin_proc_on_pwr "analytics"
-    pin_proc_on_pwr "imsdaemon"
-    pin_proc_on_pwr "cnss-daemon"
-    pin_proc_on_pwr "qadaemon"
-    pin_proc_on_pwr "ATFWD-daemon"
-    pin_proc_on_pwr "ims_rtp_daemon"
-    change_task_affinity "android.system.suspend" "7f"
+    pin_proc_on_pwr "crtc_commit|crtc_event|pp_event|msm_irqbalance|netd|mdnsd|analytics"
+    pin_proc_on_pwr "imsdaemon|cnss-daemon|qadaemon|qseecomd|time_daemon|ATFWD-daemon|ims_rtp_daemon|qcrilNrd"
     # ueventd related to hotplug of camera, wifi, usb... 
     # pin_proc_on_pwr "ueventd"
     # hardware services, eg. android.hardware.sensors@1.0-service
     pin_proc_on_pwr "android.hardware.bluetooth"
     pin_proc_on_pwr "android.hardware.gnss"
     pin_proc_on_pwr "android.hardware.health"
-    pin_proc_on_pwr "android.hardware.sensors"
     pin_proc_on_pwr "android.hardware.thermal"
     pin_proc_on_pwr "android.hardware.wifi"
+    pin_proc_on_pwr "android.hardware.keymaster"
     pin_proc_on_pwr "vendor.qti.hardware.qseecom"
-    # pwr cluster has enough capacity for surfaceflinger
-    pin_proc_on_pwr "surfaceflinger"
+    pin_proc_on_pwr "hardware.sensors"
+    pin_proc_on_pwr "sensorservice"
     # com.android.providers.media.module controlled by uperf
     pin_proc_on_pwr "android.process.media"
     # com.miui.securitycenter & com.miui.securityadd
     pin_proc_on_pwr "miui\.security"
-    # provide best performance for fingerprint service
-    change_task_nice "\.hardware\.biometrics\." "-4"
-    # mfp-daemon: goodix in-screen fingerprint daemon
-    change_task_nice "mfp" "-4"
 
     # system_server blacklist
-    pin_proc_on_mid "system_server"
+    # system_server controlled by uperf
+    change_proc_cgroup "system_server" "" "cpuset"
     # input dispatcher
     change_thread_high_prio "system_server" "input"
     # related to camera startup
-    change_thread_affinity "system_server" "ProcessManager" "ff"
+    # change_thread_affinity "system_server" "ProcessManager" "ff"
     # not important
-    pin_thread_on_pwr "system_server" "Miui"
-    pin_thread_on_pwr "system_server" "Connect"
-    pin_thread_on_pwr "system_server" "Network"
-    pin_thread_on_pwr "system_server" "Wifi"
-    pin_thread_on_pwr "system_server" "backup"
-    pin_thread_on_pwr "system_server" "Sync"
-    pin_thread_on_pwr "system_server" "Observer"
-    pin_thread_on_pwr "system_server" "Power"
-    pin_thread_on_pwr "system_server" "Sensor"
-    pin_thread_on_pwr "system_server" "batterystats"
-    pin_thread_on_pwr "system_server" "Thread-"
-    pin_thread_on_pwr "system_server" "pool-"
-    pin_thread_on_pwr "system_server" "Jit thread pool"
-    pin_thread_on_pwr "system_server" "CachedAppOpt"
-    pin_thread_on_pwr "system_server" "Greezer"
-    pin_thread_on_pwr "system_server" "TaskSnapshot"
-    pin_thread_on_pwr "system_server" "Oom"
-    change_thread_nice "system_server" "Greezer" "4"
-    change_thread_nice "system_server" "TaskSnapshot" "4"
-    change_thread_nice "system_server" "Oom" "4"
+    pin_thread_on_pwr "system_server" "Miui|Connect|Network|Wifi|backup|Sync|Observer|Power|Sensor|batterystats"
+    pin_thread_on_pwr "system_server" "Thread-|pool-|Jit|CachedAppOpt|Greezer|TaskSnapshot|Oom"
+    change_thread_nice "system_server" "Greezer|TaskSnapshot|Oom" "4"
     # pin_thread_on_pwr "system_server" "Async" # it blocks camera
     # pin_thread_on_pwr "system_server" "\.bg" # it blocks binders
     # do not let GC thread block system_server
@@ -105,6 +73,8 @@ unify_cgroup()
     # pin_thread_on_mid "system_server" "FinalizerDaemon"
 
     # Render Pipeline
+    # surfaceflinger controlled by uperf
+    # android.phone controlled by uperf
     # speed up searching service binder
     change_task_cgroup "servicemanag" "top-app" "cpuset"
     # prevent display service from being preempted by normal tasks
@@ -112,42 +82,16 @@ unify_cgroup()
     unpin_proc "\.hardware\.display"
     change_task_affinity "\.hardware\.display" "7f"
     change_task_rt "\.hardware\.display" "2"
-    # vendor.qti.hardware.perf@2.2-service blocks hardware.display.composer-service
-    # perf will automatically set self to prio=100
-    unpin_proc "\.hardware\.perf"
-    # fix laggy bilibili feed scrolling
-    change_thread_cgroup "android\.phone" "Binder" "top-app" "cpuset"
-    # sometimes surfaceflinger main thread has quite high load
-    change_task_rt "surfaceflinger" "4"
-    change_main_thread_cgroup "surfaceflinger" "top-app" "cpuset"
-    change_main_thread_cgroup "surfaceflinger" "top-app" "stune"
-    change_main_thread_cgroup "surfaceflinger" "top-app" "cpuctl"
-    pin_thread_on_mid "surfaceflinger" "app"
     # let UX related Binders run with top-app
-    change_thread_cgroup "surfaceflinger" "^Binder" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "^Binder" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "^Binder" "top-app" "stune"
-    change_thread_cgroup "system_server" "^Binder" "top-app" "cpuctl"
     change_thread_cgroup "\.hardware\.display" "^Binder" "top-app" "cpuset"
     change_thread_cgroup "\.hardware\.display" "^HwBinder" "top-app" "cpuset"
     change_thread_cgroup "\.composer" "^Binder" "top-app" "cpuset"
-    # transition animation
-    change_thread_cgroup "system_server" "android.anim" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "android.anim" "top-app" "stune"
-    change_thread_cgroup "system_server" "android.anim" "top-app" "cpuctl"
-    change_thread_cgroup "system_server" "android.display" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "android.display" "top-app" "stune"
-    change_thread_cgroup "system_server" "android.display" "top-app" "cpuctl"
-    change_thread_cgroup "system_server" "android.ui" "top-app" "cpuset"
-    change_thread_cgroup "system_server" "android.bg" "top-app" "cpuset"
 
     # Heavy Scene Boost
     # boost app boot process, zygote--com.xxxx.xxx
-    unpin_proc "zygote"
-    change_task_high_prio "zygote"
     # boost android process pool, usap--com.xxxx.xxx
-    unpin_proc "usap"
-    change_task_high_prio "usap"
+    unpin_proc "zygote|usap"
+    change_task_high_prio "zygote|usap"
 
     # busybox fork from magiskd
     pin_proc_on_mid "magiskd"
@@ -225,12 +169,12 @@ unify_lpm()
     lock_val "0" $LPM/sleep_disabled
     lock_val "0" $LPM/lpm_ipi_prediction
     if [ -f "$LPM/bias_hyst" ]; then
-        lock_val "10" $LPM/bias_hyst
+        lock_val "5" $LPM/bias_hyst
         lock_val "0" $LPM/lpm_prediction
     elif [ -f "$SCHED/sched_busy_hyst_ns" ]; then
         lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
         lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
-        lock_val "10000000" $SCHED/sched_busy_hyst_ns
+        lock_val "5000000" $SCHED/sched_busy_hyst_ns
         lock_val "0" $LPM/lpm_prediction
     else
         lock_val "1" $LPM/lpm_prediction
@@ -263,13 +207,10 @@ disable_hotplug()
 disable_kernel_boost()
 {
     # Qualcomm
-    lock_val "0" /sys/devices/system/cpu/cpu_boost/parameters/input_boost_ms
-    lock_val "0" /sys/devices/system/cpu/cpu_boost/parameters/powerkey_input_boost_ms
-    lock_val "0" /sys/devices/system/cpu/cpu_boost/input_boost_ms
-    lock_val "0" /sys/devices/system/cpu/cpu_boost/powerkey_input_boost_ms
-    lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms
-    lock_val "0" /sys/module/msm_performance/parameters/touchboost
-    lock_val "0" /sys/module/cpu_boost/parameters/boost_ms
+    lock_val "0" "/sys/devices/system/cpu/cpu_boost/*"
+    lock_val "0" "/sys/devices/system/cpu/cpu_boost/parameters/*"
+    lock_val "0" "/sys/module/cpu_boost/parameters/*"
+    lock_val "0" "/sys/module/msm_performance/parameters/*"
 
     # MediaTek
     # policy_status
@@ -290,9 +231,7 @@ disable_kernel_boost()
     mutate "6 1" /proc/ppm/policy_status
 
     # Samsung
-    mutate "0" /sys/class/input_booster/level
-    mutate "0" /sys/class/input_booster/head
-    mutate "0" /sys/class/input_booster/tail
+    mutate "0" "/sys/class/input_booster/*"
 
     # Samsung EPIC interfaces, used by uperf
     # mutate "0" /dev/cluster0_freq_min
@@ -304,49 +243,20 @@ disable_kernel_boost()
     mutate "0" /sys/kernel/ems/eff_mode
 
     # Oneplus
-    lock_val "N" /sys/module/control_center/parameters/cpu_boost_enable
-    lock_val "N" /sys/module/control_center/parameters/ddr_boost_enable
+    lock_val "N" "/sys/module/control_center/parameters/*"
     lock_val "0" /sys/module/aigov/parameters/enable
-    lock_val "0" /sys/module/houston/parameters/ais_enable
-    lock_val "0" /sys/module/houston/parameters/fps_boost_enable
-    lock_val "0" /sys/module/houston/parameters/ht_registed
-    # OnePlus opchain pins UX threads on the big cluster
+    lock_val "0" "/sys/module/houston/parameters/*"
+    # OnePlus opchain always pins UX threads on the big cluster
     lock_val "0" /sys/module/opchain/parameters/chain_on
 
     # HTC
-    lock_val "0" /sys/power/pnpmgr/touch_boost
-    lock_val "0" /sys/power/pnpmgr/long_duration_touch_boost
+    lock_val "0" "/sys/power/pnpmgr/*"
 
     # 3rd
-    lock_val "0" /sys/kernel/cpu_input_boost/enabled
-    lock_val "0" /sys/kernel/cpu_input_boost/ib_freqs
-    lock_val "0" /sys/kernel/cpu_input_boost/ib_duration_m
-    lock_val "0" /sys/kernel/cpu_input_boost/ib_duration_ms
-    lock_val "0" /sys/module/cpu_boost/parameters/input_boost_enabled
-    lock_val "0" /sys/module/cpu_boost/parameters/dynamic_stune_boost
-    lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms
-    lock_val "0" /sys/module/cpu_boost/parameters/input_boost_ms_s2
-    lock_val "0" /sys/module/dsboost/parameters/input_boost_duration
-    lock_val "0" /sys/module/dsboost/parameters/input_stune_boost
-    lock_val "0" /sys/module/dsboost/parameters/sched_stune_boost
-    lock_val "0" /sys/module/dsboost/parameters/cooldown_boost_duration
-    lock_val "0" /sys/module/dsboost/parameters/cooldown_stune_boost
-    lock_val "0" /sys/module/cpu_input_boost/parameters/input_boost_duration
-    lock_val "0" /sys/module/cpu_input_boost/parameters/dynamic_stune_boost
-    lock_val "0" /sys/module/cpu_input_boost/parameters/input_boost_freq_lp
-    lock_val "0" /sys/module/cpu_input_boost/parameters/input_boost_freq_hp
-    lock_val "0" /sys/module/cpu_input_boost/parameters/input_boost_freq_gold
-    lock_val "0" /sys/module/cpu_input_boost/parameters/flex_stune_boost_offset
-    lock_val "0" /sys/module/cpu_input_boost/parameters/dynamic_stune_boost
-    lock_val "0" /sys/module/cpu_input_boost/parameters/input_stune_boost_offset
-    lock_val "0" /sys/module/cpu_input_boost/parameters/max_stune_boost_offset
-    lock_val "0" /sys/module/cpu_input_boost/parameters/stune_boost_extender_ms
-    lock_val "0" /sys/module/cpu_input_boost/parameters/max_stune_boost_extender_ms
-    lock_val "0" /sys/module/cpu_input_boost/parameters/gpu_boost_extender_ms
-    lock_val "0" /sys/module/cpu_input_boost/parameters/flex_boost_freq_gold
-    lock_val "0" /sys/module/cpu_input_boost/parameters/flex_boost_freq_hp
-    lock_val "0" /sys/module/cpu_input_boost/parameters/flex_boost_freq_lp
-    lock_val "0" /sys/module/devfreq_boost/parameters/input_boost_duration
+    lock_val "0" "/sys/kernel/cpu_input_boost/*"
+    lock_val "0" "/sys/module/cpu_input_boost/parameters/*"
+    lock_val "0" "/sys/module/dsboost/parameters/*"
+    lock_val "0" "/sys/module/devfreq_boost/parameters/*"
 }
 
 disable_userspace_boost()
@@ -367,13 +277,11 @@ disable_userspace_boost()
     # disable service below will BOOM
     # stop vendor.power.stats-hal-1-0
     # stop vendor.power-hal-1-0
-    # stop vendor.power-hal-1-1
-    # stop vendor.power-hal-1-2
-    # stop vendor.power-hal-1-3
 }
 
 log "PATH=$PATH"
 log "sh=$(which sh)"
+rebuild_process_scan_cache
 disable_userspace_boost
 disable_kernel_boost
 disable_hotplug

@@ -2,7 +2,7 @@
 # Basic Tool Library
 # https://github.com/yc9559/
 # Author: Matt Yang
-# Version: 20210309
+# Version: 20210523
 
 BASEDIR="$(dirname "$0")"
 . $BASEDIR/pathinfo.sh
@@ -11,23 +11,27 @@ BASEDIR="$(dirname "$0")"
 # Basic tool functions
 ###############################
 
-# $1:value $2:file path
+# $1:value $2:filepaths
 lock_val() 
 {
-    if [ -f "$2" ]; then
-        chmod 0666 "$2" 2> /dev/null
-        echo "$1" > "$2"
-        chmod 0444 "$2" 2> /dev/null
-    fi
+    for p in $2; do
+        if [ -f "$p" ]; then
+            chmod 0666 "$p" 2> /dev/null
+            echo "$1" > "$p"
+            chmod 0444 "$p" 2> /dev/null
+        fi
+    done
 }
 
-# $1:value $2:file path
+# $1:value $2:filepaths
 mutate() 
 {
-    if [ -f "$2" ]; then
-        chmod 0666 "$2" 2> /dev/null
-        echo "$1" > "$2"
-    fi
+    for p in $2; do
+        if [ -f "$p" ]; then
+            chmod 0666 "$p" 2> /dev/null
+            echo "$1" > "$p"
+        fi
+    done
 }
 
 # $1:file path

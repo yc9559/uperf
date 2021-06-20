@@ -277,6 +277,17 @@ _get_mt6885_type()
     fi
 }
 
+_get_lahaina_type()
+{
+    local b_max
+    b_max="$(_get_maxfreq 7)"
+    if [ "$b_max" -gt 2600000 ]; then
+        echo "sdm888"
+    else
+        echo "sdm780"
+    fi
+}
+
 # $1:cfg_name
 _setup_platform_file()
 {
@@ -296,7 +307,7 @@ _get_cfgname()
 {
     local ret
     case "$1" in
-    "lahaina")       ret="sdm888" ;;
+    "lahaina")       ret="$(_get_lahaina_type)" ;;
     "shima")         ret="sdm775" ;;
     "kona")          ret="sdm865" ;;
     "msmnile")       ret="sdm855" ;;
@@ -337,6 +348,8 @@ _get_cfgname()
     "mt6875")        ret="$(_get_mt6873_type)" ;;
     "mt6885")        ret="$(_get_mt6885_type)" ;;
     "mt6889")        ret="$(_get_mt6885_type)" ;;
+    "mt6891")        ret="mtd1100" ;;
+    "mt6893")        ret="mtd1200" ;;
     *)               ret="unsupported" ;;
     esac
     echo "$ret"
@@ -347,7 +360,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.05.23)"
+    echo "* Version: v2 (21.06.20)"
     echo ""
 }
 
@@ -359,17 +372,16 @@ uperf_print_finish()
 uperf_install()
 {
     echo "- Installing uperf"
+    echo "- ro.board.platform=$(getprop ro.board.platform)"
+    echo "- ro.product.board=$(getprop ro.product.board)"
 
     local target
     local cfgname
-
     target="$(getprop ro.board.platform)"
     cfgname="$(_get_cfgname $target)"
-    echo "- ro.board.platform=$target"
     if [ "$cfgname" == "unsupported" ]; then
         target="$(getprop ro.product.board)"
         cfgname="$(_get_cfgname $target)"
-        echo "- ro.product.board=$target"
     fi
 
     mkdir -p $USER_PATH
@@ -382,9 +394,9 @@ uperf_install()
     rm -rf $BASEDIR/config
 
     if [ "$(_is_aarch64)" == "true" ]; then
-        cp "$BASEDIR/uperf/arm64-v8a/uperf" "$BASEDIR/bin"
+        cp "$BASEDIR/uperf/aarch64/uperf" "$BASEDIR/bin"
     else
-        cp "$BASEDIR/uperf/armeabi-v7a/uperf" "$BASEDIR/bin"
+        cp "$BASEDIR/uperf/arm/uperf" "$BASEDIR/bin"
     fi
 
     _set_perm_recursive $BASEDIR 0 0 0755 0644
@@ -398,26 +410,24 @@ uperf_install()
 injector_install()
 {
     echo "- Installing injector"
-    echo "- SELinux will be set to PERMISSIVE at boot for better compatibility"
-    echo "- ...delete \$MODDIR/flags/selinux_permissive to leave SELinux untouched."
+    echo "- SELinux may be set PERMISSIVE for better compatibility"
+    echo "- To keep ENFORCING, please delete flags/allow_permissive"
 
     local src_path
     local dst_path
     if [ "$(_is_aarch64)" == "true" ]; then
-        src_path="$BASEDIR/injector/arm64-v8a"
+        src_path="$BASEDIR/injector/aarch64"
         dst_path="$BASEDIR/system/lib64"
     else
-        src_path="$BASEDIR/injector/armeabi-v7a"
+        src_path="$BASEDIR/injector/arm"
         dst_path="$BASEDIR/system/lib"
     fi
 
     mkdir -p "$dst_path"
-    cp "$src_path/injector" "$BASEDIR/bin/"
+    cp "$src_path/sfa_injector" "$BASEDIR/bin/"
     cp "$src_path/libsfanalysis.so" "$dst_path"
-    cp "$src_path/libssanalysis.so" "$dst_path"
-    _set_perm "$BASEDIR/bin/injector" 0 0 0755 u:object_r:system_file:s0
+    _set_perm "$BASEDIR/bin/sfa_injector" 0 0 0755 u:object_r:system_file:s0
     _set_perm "$dst_path/libsfanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
-    _set_perm "$dst_path/libssanalysis.so" 0 0 0644 u:object_r:system_lib_file:s0
 
     # in case of set_perm_recursive is broken
     chmod 0755 $BASEDIR/bin/*

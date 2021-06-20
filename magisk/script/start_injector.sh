@@ -13,7 +13,7 @@ BASEDIR="$(dirname "$0")"
 ###############################
 
 INJ_REL="$BIN_DIR"
-INJ_NAME="injector"
+INJ_NAME="sfa_injector"
 
 ###############################
 # Injector tool functions
@@ -34,28 +34,32 @@ inj_do_inject()
     # fallback to standlone mode
     [ ! -e "$lib_path" ] && lib_path="${MODULE_PATH}${lib_path}"
 
-    "$MODULE_PATH/$INJ_REL/$INJ_NAME" "$1" "$lib_path" >> "$LOG_FILE"
+    # try to allow executing dlopen in surfaceflinger
+    magiskpolicy --live "allow surfaceflinger system_lib_file file { read getattr execute }" >> "$LOG_FILE"
 
-    # Although injection may fail, remove inplicit SELinux operation
-    # if [ "$?" != "0" ]; then
-    #     log "Set SELinux to permissive, retry..."
-    #     setenforce 0
-    #     "$MODULE_PATH/$INJ_REL/$INJ_NAME" "$1" "$lib_path" >> "$LOG_FILE"
-    # fi
+    "$MODULE_PATH/$INJ_REL/$INJ_NAME" "$lib_path" >> "$LOG_FILE"
+
+    if [ "$?" != "0" ]; then
+        if [ -f "$FLAGS/allow_permissive" ]; then
+            log "Set SELinux permissive, retry..."
+            local sestate
+            sestate="$(getenforce)"
+            setenforce 0
+            "$MODULE_PATH/$INJ_REL/$INJ_NAME" "$lib_path" >> "$LOG_FILE"
+            if [ "$sestate" == "Enforcing" ]; then
+                log "Resume SELinux enforcing"
+                setenforce 1
+            fi
+        else
+            log "Not allowed to set SELinux permissive, failed to retry"
+        fi
+    fi
 
     sleep 1
     logcat -d | grep -i "$3" >> "$LOG_FILE"
 
     log "[end] injecting $2 to $1"
+    log ""
 }
 
-inj_start()
-{
-    log "$(date '+%Y-%m-%d %H:%M:%S')"
-    [ -f "$FLAGS/selinux_permissive" ] && setenforce 0
-    [ -f "$FLAGS/enable_sfanalysis" ] && inj_do_inject "/system/bin/surfaceflinger" "libsfanalysis.so" "SfAnalysis"
-    [ -f "$FLAGS/enable_ssanalysis" ] && inj_do_inject "system_server" "libssanalysis.so" "SsAnalysis"
-}
-
-clear_log
-inj_start
+inj_do_inject "/system/bin/surfaceflinger" "libsfanalysis.so" "SfAnalysis"
