@@ -46,7 +46,7 @@ https://github.com/yc9559/uperf/releases
 
 #### 修改启动时的默认性能模式
 
-1. 打开`/sdcard/yc/uperf/panel_uperf.txt`
+1. 打开`/sdcard/yc/uperf/cur_powermode`
 2. 修改`default_mode=balance`, 其中`balance`为开机后使用的默认性能模式，可选的模式有:
    - `balance`均衡模式，比原厂略流畅的同时略省电
    - `powersave`卡顿模式，保证基本流畅的同时尽可能降低功耗
