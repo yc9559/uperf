@@ -36,6 +36,8 @@ inj_do_inject()
 
     # try to allow executing dlopen in surfaceflinger
     magiskpolicy --live "allow surfaceflinger system_lib_file file { read getattr execute }" >> "$LOG_FILE"
+    magiskpolicy --live "allow surfaceflinger system_data_file file { read write getattr }" >> "$LOG_FILE"
+    magiskpolicy --live "allow surfaceflinger system_data_file dir { read write getattr search }" >> "$LOG_FILE"
 
     "$MODULE_PATH/$INJ_REL/$INJ_NAME" "$lib_path" >> "$LOG_FILE"
 

@@ -157,6 +157,24 @@ _get_sdm660_type()
     fi
 }
 
+_get_sdm652_type()
+{
+    if [ "$(_is_eas)" == "true" ]; then
+        echo "sdm652_eas"
+    else
+        echo "sdm652_hmp"
+    fi
+}
+
+_get_sdm650_type()
+{
+    if [ "$(_is_eas)" == "true" ]; then
+        echo "sdm650_eas"
+    else
+        echo "sdm650_hmp"
+    fi
+}
+
 _get_sdm626_type()
 {
     if [ "$(_is_eas)" == "true" ]; then
@@ -324,8 +342,8 @@ _get_cfgname()
     "sdm636")        ret="$(_get_sdm636_type)" ;;
     "trinket")       ret="sdm665" ;;
     "bengal")        ret="sdm665" ;; # sdm662
-    "msm8976")       ret="sdm652" ;;
-    "msm8956")       ret="sdm650" ;;
+    "msm8976")       ret="$(_get_sdm652_type)" ;;
+    "msm8956")       ret="$(_get_sdm650_type)" ;;
     "msm8998")       ret="$(_get_sdm835_type)" ;;
     "msm8996")       ret="$(_get_sdm82x_type)" ;;
     "msm8996pro")    ret="$(_get_sdm82x_type)" ;;
@@ -360,7 +378,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.06.20)"
+    echo "* Version: v2 (21.07.25)"
     echo ""
 }
 

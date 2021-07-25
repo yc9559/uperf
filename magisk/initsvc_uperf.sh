@@ -25,9 +25,10 @@ wait_until_login()
 
 crash_recuser()
 {
+    rm $BASEDIR/logcat.log
     logcat -f $BASEDIR/logcat.log &
     sleep 60
-    kill -9 $!
+    killall logcat
     rm -f $BASEDIR/flags/.need_recuser
 }
 

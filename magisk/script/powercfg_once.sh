@@ -157,9 +157,9 @@ unify_sched()
     set_sched_migrate "50" "15" "999" "888"
     set_sched_migrate "50 90" "15 70" "999" "888"
 
-    # prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
-    # system_server binders maybe pinned on perf cluster due to this
-    # lock_val "10000000" $SCHED/sched_migration_cost_ns
+    # 10ms=10000000, prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
+    # 0.2ms=200000, prevent system_server binders pinned on perf cluster
+    lock_val "200000" $SCHED/sched_migration_cost_ns
 }
 
 unify_lpm()
@@ -172,7 +172,7 @@ unify_lpm()
         lock_val "5" $LPM/bias_hyst
         lock_val "0" $LPM/lpm_prediction
     elif [ -f "$SCHED/sched_busy_hyst_ns" ]; then
-        lock_val "255" $SCHED/sched_busy_hysteresis_enable_cpus
+        lock_val "127" $SCHED/sched_busy_hysteresis_enable_cpus # seem not working well on cpu7
         lock_val "0" $SCHED/sched_coloc_busy_hysteresis_enable_cpus
         lock_val "5000000" $SCHED/sched_busy_hyst_ns
         lock_val "0" $LPM/lpm_prediction
