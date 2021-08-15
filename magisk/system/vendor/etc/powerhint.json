@@ -8,89 +8,18 @@
                 "1000"
             ],
             "Type": "File",
-            "DefaultIndex": 0,
+            "DefaultIndex": 1,
             "ResetOnInit": true,
             "HoldFd": true
         }
     ],
     "Actions": [
         {
-            "PowerHint": "SUSTAINED_PERFORMANCE",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "INTERACTION",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
             "PowerHint": "LAUNCH",
             "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_LAUNCH",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_STREAMING",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_STREAMING_60FPS",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_STREAMING_4K",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_STREAMING_SECURE",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "CAMERA_SHOT",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "AUDIO_STREAMING",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "AUDIO_LOW_LATENCY",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "EXPENSIVE_RENDERING",
-            "Node": "PMQoSCpuDmaLatency",
-            "Duration": 0,
-            "Value": "1000"
-        },
-        {
-            "PowerHint": "TPU_BOOST",
-            "Node": "PMQoSCpuDmaLatency",
             "Duration": 2000,
-            "Value": "44"
+            "Value": "44",
+            "ValueIndex": 0
         }
     ]
 }

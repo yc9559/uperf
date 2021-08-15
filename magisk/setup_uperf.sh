@@ -378,7 +378,7 @@ uperf_print_banner()
     echo ""
     echo "* Uperf https://github.com/yc9559/uperf/"
     echo "* Author: Matt Yang"
-    echo "* Version: v2 (21.07.25)"
+    echo "* Version: v2 (21.08.15)"
     echo ""
 }
 
@@ -457,11 +457,28 @@ powerhal_stub_install()
 {
     echo "- Installing perfhal stub"
 
-    _set_perm "$BASEDIR/system/vendor/etc/powerhint.json" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.cfg" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/powerscntbl.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/commonresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
-    _set_perm "$BASEDIR/system/vendor/etc/perf/targetresourceconfigs.xml" 0 0 0755 u:object_r:vendor_configs_file:s0
+    # do not place empty json if it doesn't exist in system
+    # vendor/etc/powerhint.json: android perf hal
+    # vendor/etc/powerscntbl.cfg: mediatek perf hal (android 9)
+    # vendor/etc/powerscntbl.xml: mediatek perf hal (android 10+)
+    # vendor/etc/perf/commonresourceconfigs.json: qualcomm perf hal resource
+    # vendor/etc/perf/targetresourceconfigs.json: qualcomm perf hal resource overrides
+    local perfcfgs
+    perfcfgs="
+    vendor/etc/powerhint.json
+    vendor/etc/powerscntbl.cfg
+    vendor/etc/powerscntbl.xml
+    vendor/etc/perf/commonresourceconfigs.xml
+    vendor/etc/perf/targetresourceconfigs.xml
+    "
+    for f in $perfcfgs; do
+        if [ ! -f "/$f" ]; then
+            rm "$BASEDIR/system/$f"
+        else
+            _set_perm "$BASEDIR/system/$f" 0 0 0644 u:object_r:vendor_configs_file:s0
+            true > $BASEDIR/flags/enable_perfhal_stub
+        fi
+    done
 }
 
 busybox_install()

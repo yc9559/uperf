@@ -63,11 +63,12 @@ unify_cgroup()
     # related to camera startup
     # change_thread_affinity "system_server" "ProcessManager" "ff"
     # not important
-    pin_thread_on_pwr "system_server" "Miui|Connect|Network|Wifi|backup|Sync|Observer|Power|Sensor|batterystats"
+    pin_thread_on_pwr "system_server" "Miui|Connect|Wifi|backup|Sync|Observer|Power|Sensor|batterystats"
     pin_thread_on_pwr "system_server" "Thread-|pool-|Jit|CachedAppOpt|Greezer|TaskSnapshot|Oom"
     change_thread_nice "system_server" "Greezer|TaskSnapshot|Oom" "4"
     # pin_thread_on_pwr "system_server" "Async" # it blocks camera
     # pin_thread_on_pwr "system_server" "\.bg" # it blocks binders
+    # pin_thread_on_pwr "system_server" "Network" # may reduce network speed on MIUI
     # do not let GC thread block system_server
     # pin_thread_on_mid "system_server" "HeapTaskDaemon"
     # pin_thread_on_mid "system_server" "FinalizerDaemon"
@@ -116,11 +117,6 @@ unify_cpufreq()
     set_governor_param "scaling_governor" "0:interactive 2:interactive 4:interactive 6:interactive 7:interactive"
     set_governor_param "scaling_governor" "0:schedutil 2:schedutil 4:schedutil 6:schedutil 7:schedutil"
 
-    # unify walt schedutil governor
-    set_governor_param "schedutil/hispeed_freq" "0:0 2:0 4:0 6:0 7:0"
-    set_governor_param "schedutil/hispeed_load" "0:100 2:100 4:100 6:100 7:100"
-    set_governor_param "schedutil/pl" "0:1 2:1 4:1 6:1 7:1"
-
     # unify hmp interactive governor, only 2+2 4+2 4+4
     set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
     set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1"
@@ -155,7 +151,7 @@ unify_sched()
     # The same Binder, A55@1.0g took 7.3ms，A76@1.0g took 3.0ms, in this case, A76's efficiency is 2.4x of A55's.
     # However in EAS model A76's efficiency is 1.7x of A55's, so the down migrate threshold need compensate.
     set_sched_migrate "50" "15" "999" "888"
-    set_sched_migrate "50 90" "15 70" "999" "888"
+    set_sched_migrate "50 80" "15 60" "999" "888"
 
     # 10ms=10000000, prefer to use prev cpu, decrease jitter from 0.5ms to 0.3ms with lpm settings
     # 0.2ms=200000, prevent system_server binders pinned on perf cluster
@@ -269,7 +265,7 @@ disable_userspace_boost()
     [ ! -f "$FLAGS/enable_perfhal_stub" ] && perfhal_stop
 
     # xiaomi perfservice
-    stop vendor.perfservice
+    # stop vendor.perfservice
 
     # brain service maybe not smart
     stop oneplus_brain_service 2> /dev/null
