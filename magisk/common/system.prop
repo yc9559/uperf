@@ -2,8 +2,5 @@
 # Example: Change dpi
 # ro.sf.lcd_density=320
 
-# unify surfaceflinger props
-debug.sf.latch_unsignaled=1
-ro.surface_flinger.max_frame_buffer_acquired_buffers=4
-persist.sys.miui.sf_cores=6
-persist.sys.miui_animator_sched.bigcores=6-7
+# headroom for GC
+dalvik.vm.heapminfree=2m

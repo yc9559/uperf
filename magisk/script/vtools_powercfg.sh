@@ -1,4 +1,4 @@
-#!/system/bin/sh
+#!/vendor/bin/sh
 #
 # Copyright (C) 2021-2022 Matt Yang
 #
@@ -15,11 +15,5 @@
 # limitations under the License.
 #
 
-BASEDIR="$(dirname $(readlink -f "$0"))"
-. $BASEDIR/pathinfo.sh
-
-action="$1"
-case "$1" in
-"powersave" | "balance" | "performance" | "fast" | "auto") echo "$1" >"$USER_PATH/cur_powermode.txt" ;;
-*) echo "Failed to apply unknown action '$1'." ;;
-esac
+# powercfg wrapper for com.omarea.vtools
+# MAKE SURE THAT THE MAGISK MODULE "Uperf" HAS BEEN INSTALLED

@@ -96,36 +96,27 @@ REPLACE=""
 ##########################################################################################x
 
 # Set what you want to display when installing your module
-print_modname()
-{
-    # use setup_uperf.sh/uperf_print_banner
+print_modname() {
     return
 }
 
 # Copy/extract your module files into $MODPATH in on_install.
-on_install()
-{
+on_install() {
     $BOOTMODE || abort "! Uperf cannot be installed in recovery."
+    [ $ARCH == "arm64" ] || abort "! Uperf ONLY support arm64 platform."
 
     ui_print "- Extracting module files"
-    unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH > /dev/null
+    unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >/dev/null
+
     # use universal setup.sh
-    sh $MODPATH/setup_uperf.sh
+    sh $MODPATH/script/setup.sh
     [ "$?" != "0" ] && abort
-    # use once
-    rm $MODPATH/setup_uperf.sh
 }
 
 # Only some special files require specific permissions
 # This function will be called after on_install is done
 # The default permissions should be good enough for most cases
-set_permissions()
-{
-    # Here are some examples:
-    # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
-    # set_perm  $MODPATH/system/bin/app_process32   0     2000    0755      u:object_r:zygote_exec:s0
-    # set_perm  $MODPATH/system/bin/dex2oat         0     2000    0755      u:object_r:dex2oat_exec:s0
-    # set_perm  $MODPATH/system/lib/libart.so       0     0       0644
+set_permissions() {
     return
 }
 

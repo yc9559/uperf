@@ -1,0 +1,8 @@
+# 分应用性能模式配置
+# Per-app dynamic power mode rule
+# '-' means offscreen rule
+# '*' means default rule
+
+com.miHoYo.Yuanshen fast
+- balance
+* balance
