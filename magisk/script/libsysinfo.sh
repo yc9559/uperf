@@ -100,48 +100,15 @@ _get_msm8916_type() {
     esac
 }
 
-_get_msm8952_type() {
-    case "$(get_socid)" in
-    "264" | "289")
-        echo "msm8952"
-        ;;
-    *)
-        if [ "$(get_nr_core)" == "8" ]; then
-            echo "sdm652"
-        else
-            echo "sdm650"
-        fi
-        ;;
-    esac
-}
-
-_get_mt6853_type() {
-    local b_max
-    b_max="$(get_maxfreq 6)"
-    if [ "$b_max" -gt 2200000 ]; then
-        echo "mtd800u"
-    else
-        echo "mtd720"
-    fi
-}
-
-_get_mt6873_type() {
-    local b_max
-    b_max="$(get_maxfreq 4)"
-    if [ "$b_max" -gt 2500000 ]; then
-        echo "mtd820"
-    else
-        echo "mtd800"
-    fi
-}
-
 _get_lahaina_type() {
-    local b_max
-    b_max="$(get_maxfreq 7)"
-    if [ "$b_max" -gt 2600000 ]; then
+    if [ "$(get_maxfreq 7)" -gt 2600000 ]; then
         echo "sdm888"
     else
-        echo "sdm780"
+        if [ "$(get_maxfreq 4)" -gt 2300000 ]; then
+            echo "sdm778"
+        else
+            echo "sdm780"
+        fi
     fi
 }
 
@@ -150,7 +117,8 @@ get_config_name() {
     case "$1" in
     "taro") echo "sdm8g1" ;;
     "lahaina") echo "$(_get_lahaina_type)" ;;
-    "shima") echo "sdm775" ;;
+    "shima") echo "$(_get_lahaina_type)" ;;
+    "yupik") echo "$(_get_lahaina_type)" ;;
     "kona") echo "sdm865" ;;    # 865, 870
     "msmnile") echo "sdm855" ;; # 855, 860
     "sdm845") echo "sdm845" ;;
@@ -159,21 +127,22 @@ get_config_name() {
     "sdm710") echo "sdm710" ;;
     "msm8916") echo "$(_get_msm8916_type)" ;;
     "msm8939") echo "sdm616" ;;
-    "msm8952") echo "$(_get_msm8952_type)" ;;
-    "msm8953") echo "sdm625" ;;    # 625, 626
-    "msm8953pro") echo "sdm625" ;; # 625, 626
-    "sdm660") echo "sdm660" ;;     # 660, 636
-    "sdm636") echo "sdm660" ;;     # 660, 636
-    "trinket") echo "sdm665" ;;
-    "bengal") echo "sdm665" ;; # sdm662
+    "msm8953") echo "sdm625" ;;    # 625
+    "msm8953pro") echo "sdm625" ;; # 626
+    "sdm660") echo "sdm660" ;;
+    "sdm636") echo "sdm660" ;;
+    "trinket") echo "sdm660" ;; # sdm660
+    "bengal") echo "sdm660" ;; # sdm662
     "msm8976") echo "sdm652" ;;
     "msm8956") echo "sdm650" ;;
     "msm8998") echo "sdm835" ;;
     "msm8996") echo "sdm820" ;;
     "msm8996pro") echo "sdm820" ;;
+    "exynos2200") echo "e2200" ;;
     "exynos2100") echo "e2100" ;;
     "exynos1080") echo "e1080" ;;
     "exynos990") echo "e990" ;;
+    "universal2200") echo "e2200" ;;
     "universal2100") echo "e2100" ;;
     "universal1080") echo "e1080" ;;
     "universal990") echo "e990" ;;
@@ -185,9 +154,11 @@ get_config_name() {
     "universal7420") echo "e7420" ;;
     "mt6768") echo "mtg80" ;; # Helio P65(mt6768)/G70(mt6769v)/G80(mt6769t)/G85(mt6769z)
     "mt6785") echo "mtg90t" ;;
-    "mt6853") echo "$(_get_mt6853_type)" ;;
-    "mt6873") echo "$(_get_mt6873_type)" ;;
-    "mt6875") echo "$(_get_mt6873_type)" ;;
+    "mt6833") echo "mtd720" ;;
+    "mt6853") echo "mtd720" ;;
+    "mt6873") echo "mtd820" ;;
+    "mt6875") echo "mtd820" ;;
+    "mt6877") echo "mtd920" ;;
     "mt6885") echo "mtd1000" ;;
     "mt6889") echo "mtd1000" ;;
     "mt6891") echo "mtd1100" ;;

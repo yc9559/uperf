@@ -38,5 +38,5 @@ lock_val "1048576" /proc/sys/fs/inotify/max_queued_events
 lock_val "1048576" /proc/sys/fs/inotify/max_user_watches
 lock_val "1024" /proc/sys/fs/inotify/max_user_instances
 
-mv $USER_PATH/uperf.log $USER_PATH/uperf.log.bak
-$BIN_PATH/uperf $USER_PATH/uperf.json -o $USER_PATH/uperf.log
+mv $USER_PATH/uperf_log.txt $USER_PATH/uperf_log.txt.bak
+$BIN_PATH/uperf $USER_PATH/uperf.json -o $USER_PATH/uperf_log.txt

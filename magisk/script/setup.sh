@@ -107,7 +107,7 @@ install_powerhal_stub() {
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
 echo "* Author: Matt Yang"
-echo "* Version: v3(22.04.04)"
+echo "* Version: v3(22.04.09)"
 echo ""
 
 echo "- Installing uperf"

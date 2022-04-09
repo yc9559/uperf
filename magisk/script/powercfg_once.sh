@@ -43,13 +43,14 @@ unify_cgroup() {
     rmdir /dev/cpuset/foreground/boost
 
     # work with uperf/ContextScheduler
-    change_task_cgroup "system_server" "" "cpuset"
-    change_task_cgroup "surfaceflinger" "" "cpuset"
-    change_task_cgroup "composer|allocator" "foreground" "cpuset"
-    change_task_cgroup "android.hardware.media|android.hardware.audio|audioserver" "top-app" "cpuset"
+    change_task_cgroup "surfaceflinger" "top-app" "cpuset"
+    change_task_cgroup "system_server" "top-app" "cpuset"
+    change_task_cgroup "android.hardware.media|android.hardware.audio" "top-app" "cpuset"
     change_task_cgroup "kswapd0|kcompactd0|ion-pool-" "foreground" "cpuset"
-    # MTK kernel threads seems always wakeup on cpu7
-    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread" "background" "cpuset"
+    change_task_cgroup "netd|audioserver" "background" "cpuset"
+    change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
+    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|mali_kbase_|ged_" "background" "cpuset"
+    change_task_cgroup "pp_event|crtc_" "background" "cpuset"
 }
 
 unify_cpufreq() {
@@ -57,8 +58,8 @@ unify_cpufreq() {
     set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
     set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
 
-    # stop sched core_ctl, omit cpu7
-    set_corectl_param "enable" "0:0 2:0 4:0 6:0"
+    # stop sched core_ctl
+    set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
 
     # clear cpu load scale factor
     for i in 0 1 2 3 4 5 6 7 8 9; do
@@ -78,11 +79,6 @@ unify_sched() {
     # 90/60
     set_sched_migrate "90" "60" "90" "60"
     set_sched_migrate "90 90" "60 60" "90" "60"
-
-    # CFS
-    lock_val "1500000" /proc/sys/kernel/sched_migration_cost_ns
-    lock_val "1000000" /proc/sys/kernel/sched_wakeup_granularity_ns
-    lock_val "2000000" /proc/sys/kernel/sched_min_granularity_ns
 }
 
 disable_hotplug() {
