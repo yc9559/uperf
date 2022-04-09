@@ -23,7 +23,9 @@ crash_recuser() {
     sleep 60
     killall logcat
     rm -f $BASEDIR/flag/need_recuser
+    rm $BASEDIR/logcat.log
 }
 
 (crash_recuser &)
+
 sh $BASEDIR/script/initsvc.sh

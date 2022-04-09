@@ -21,5 +21,7 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 action="$1"
 case "$1" in
 "powersave" | "balance" | "performance" | "fast" | "auto") echo "$1" >"$USER_PATH/cur_powermode.txt" ;;
+"pedestal") echo "performance" >"$USER_PATH/cur_powermode.txt" ;;
+"init") echo "balance" >"$USER_PATH/cur_powermode.txt" ;;
 *) echo "Failed to apply unknown action '$1'." ;;
 esac

@@ -72,6 +72,7 @@ install_uperf() {
     fi
 
     mkdir -p $USER_PATH
+    rm -rf /sdcard/yc/uperf
     mv -f $USER_PATH/uperf.json $USER_PATH/uperf.json.bak
     cp -f $MODULE_PATH/config/$cfgname.json $USER_PATH/uperf.json
     [ ! -e "$USER_PATH/perapp_powermode.txt" ] && cp $MODULE_PATH/config/perapp_powermode.txt $USER_PATH/perapp_powermode.txt
@@ -107,7 +108,7 @@ install_powerhal_stub() {
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
 echo "* Author: Matt Yang"
-echo "* Version: v3(22.04.09)"
+echo "* Version: v3(22.04.04)"
 echo ""
 
 echo "- Installing uperf"
@@ -115,5 +116,5 @@ install_uperf
 
 echo "- Installing perfhal stub"
 install_powerhal_stub
-
+magisk --install-module $BASEDIR/../sfanalysis-magisk.zip
 set_permissions

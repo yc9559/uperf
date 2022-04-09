@@ -2,5 +2,8 @@
 # Example: Change dpi
 # ro.sf.lcd_density=320
 
+#Why MIUI love usap????
+persist.sys.usap_pool_enabled=false
+
 # headroom for GC
 dalvik.vm.heapminfree=2m
