@@ -57,7 +57,8 @@ set_permissions() {
 install_uperf() {
     echo "- ro.board.platform=$(getprop ro.board.platform)"
     echo "- ro.product.board=$(getprop ro.product.board)"
-
+    chmod 444 /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo*
+    chmod 444 /sys/devices/system/cpu/cpufreq/policy*/cpuinfo*
     local target
     local cfgname
     target="$(getprop ro.board.platform)"
