@@ -11,9 +11,9 @@
 - 监听cpuset分组更新操作，识别正在操作的APP发生切换
 - 监听唤醒锁更新操作，识别屏幕是否熄灭
 - 监听注入到Surfaceflinger的hook发送的通知，识别渲染开始、滞后、结束
-- 支持Android 6.0 - 10
-- 支持armeabi-v7a，arm64-v8a
-- 支持Magisk方式一键安装，版本不低于18.0
+- 支持Android 6.0 - 12
+- 支持arm64-v8a
+- 支持Magisk方式一键安装，版本不低于23.0
 - 不依赖于Magisk，可以手动方式安装
 - 除非SfAnalysis注入失败，大多数情况SELinux可保持`enforcing`
 - 不依赖于任何Android应用层框架以及第三方内核
@@ -28,7 +28,7 @@ https://github.com/yc9559/uperf/releases
 ### Magisk方式
 
 1. 下载后通过Magisk Manager刷入，Magisk版本不低于18.0
-2. 重启后查看`/sdcard/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
+2. 重启后查看`/sdcard/Android/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
 
 ### 手动安装
 
@@ -46,11 +46,13 @@ https://github.com/yc9559/uperf/releases
 
 #### 修改启动时的默认性能模式
 
-1. 打开`/sdcard/yc/uperf/panel_uperf.txt`
-2. 修改`default_mode=balance`, 其中`balance`为开机后使用的默认性能模式，可选的模式有:
+1. 打开`/sdcard/Android/yc/uperf/cur_powermode.txt`
+2. 修改`auto`, 其中`auto`为开机后使用的默认性能模式，可选的模式有:
+   - `auto`根据正在使用的App进行动态响应
    - `balance`均衡模式，比原厂略流畅的同时略省电
    - `powersave`卡顿模式，保证基本流畅的同时尽可能降低功耗
    - `performance`费电模式，保证费电的同时多一点流畅度
+   - `fast`性能模式，相对于均衡模式更佳激进
 3. 重启
 
 #### 启动完成后切换性能模式
@@ -59,7 +61,7 @@ https://github.com/yc9559/uperf/releases
 执行`sh /data/powercfg.sh balance`，其中`balance`是想要切换到的性能模式名称。  
 
 方法2:  
-安装[微工具箱](https://www.coolapk.com/apk/com.omarea.vtools)为APP绑定对应的性能模式。  
+安装[Scene 5](https://www.coolapk.com/apk/com.omarea.vtools)为APP绑定对应的性能模式。  
 
 ## 常见问题
 
@@ -117,21 +119,28 @@ A：此硬件平台没有预制的配置文件，可能需要自行适配。
 
 ### 情景识别
 
+注：v3版本已经修改，此部分不适用
 Uperf支持如下几种情景识别：  
 - `None`，无Hint的常规状态
+- `Touch`，触摸到屏幕切换的Hint
+- `Pressed`，长按时切换的的Hint
 - `Tap`，在刚触摸到屏幕切换的Hint
 - `Swipe`，在屏幕滑动一段距离后切换的Hint
 - `HeavyLoad`，在Tap或Swipe检测到重负载后切换，负载降低后回落到Tap
-- `AndroidAM`，在ActivityManager活跃时触发的Hint，例如无input事件的屏下指纹解锁
-- `Standby`，屏幕熄灭时的Hint，一般滞后20秒
-- `SfLag`，给Surfaceflinger的渲染提交出现滞后的Hint
+- `SfLag`，给Surfaceflinger的渲染提交出现滞后切换的Hint
+- `SfBoost`，Surfaceflinger的渲染提交需要加速切换的Hint
+- `Standby`，屏幕熄灭时的Hint，一般滞后20秒(隐藏Hint)
+- `SsAnim`，系统动画播放切换的Hint
+- `WakeUp`，亮屏解锁切换的Hint
+
+
 
 #### 触摸信号识别
 
 本程序采用了跟安卓系统框架获取触摸信号一样的方式，监听位于/dev/input的设备，解析来自触摸屏的报点信息，可以获取到最基本的手指触摸到屏幕和手指离开屏幕的事件。根据一段连续的报点信息可以得到手指滑动的距离以及离开屏幕时末端速度，由此可以推断是点击操作还是滑动操作，以及根据末端速度推算APP滚动的持续时间。
 
-#### 重负载跟踪与限制
-
+#### 重负载跟踪与限制(已经弃用)
+**由于和其它分析出现冲突，已经弃用**
 因为不在安卓框架层插入Hook无法确切知道APP正在启动，因此本程序在Hint开始后，用主动轮询的方式更新所有CPU核心的使用率和运行频率得到系统整体负载。`系统整体负载 = sum(efficiency(i) * (load_pct(i) / 100) * (freq_mhz(i) / 1000))`，其中`i`为CPU核心ID。如果整体负载高于`heavyLoad`，那么把当前Hint切换到重负载Hint。重负载Hint的响应性能很好但耗电也偏多，本程序会持续监测系统负载，如果整体负载低于阈值，提前结束耗电的重负载Hint。对于负载不是那么高的APP热启动，甚至不会触发重负载，不像高通Boost框架不管负载多少强行拉满CPU持续2s。此外，这样的检测不仅涵盖了APP冷热启动，还涵盖了例如点击进入微信朋友圈这样的短时重负载场景。本功能的能耗开销也是在非常低的0.6ms/100ms（Cortex-A55@1.0g）。下图为微信热启动Hint状态切换与持续时间。
 
 ![微信热启动](media/wechat_resume.png)
@@ -158,7 +167,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 
 ![检测到渲染延迟立即拉升CPU频率](./media/sflag.png)
 
-渲染提交滞后对应的Hint`SfLag`与重负载一样，有调用频率限制避免长时间拉升高频，相关参数暂时没有开放更改。`SfLag`使用可用次数缓冲池控制调用频率，每满400ms间隔可用次数+1，最大到20次。为了避免不必要的频率拉升，只允许从`Tap`、`Swipe`、`AndroidAM`转移到`SfLag`。SfAnalysis正常工作后在日志以如下方式体现：  
+渲染提交滞后对应的Hint`SfLag`与重负载一样，有调用频率限制避免长时间拉升高频，相关参数暂时没有开放更改。`SfLag`使用可用次数缓冲池控制调用频率，每满400ms间隔可用次数+1，最大到20次。为了避免不必要的频率拉升，只允许从`Tap`、`Swipe`、`Touch`、`Pressed`转移到`SfLag`。SfAnalysis正常工作后在日志以如下方式体现：  
 ```
 [13:03:36][I] SfAnalysis: Surfaceflinger analysis connected
 ```
@@ -177,7 +186,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
 ### 写入器
 
 写入器基本功能是把目标字符串值写入到`sysfs`节点，除此以外，Uperf还内建了多种写入器实现了其他功能和更加紧凑的参数序列。在切换动作时，Uperf会比对与上一动作参数值的差异，跳过写入重复的值来减少自身功耗开销。Uperf支持的`knob`有如下几种类型：  
-- `string`，最基础的写入器。效果等同于`echo "val" > /path`。
+- `string`，最基础的写入器。效果等同于`echo "val" > /path`。 **注意：为了提升性能，不会和echo一样清空原有内容**
 - `percluster`，分集群紧凑型写入器。使用配置文件中`platform/clusterCpuId`的CPU序号替换`path`中的`%d`，各个值由逗号分隔，使得按集群做区分的值更加紧凑，改善可读性。
 - `percpu`，分核心紧凑型写入器。根据配置文件中`platform/efficiency`的列表长度，生成CPU序号替换`path`中的`%d`，各个值由逗号分隔，使得按CPU核心做区分的值更加紧凑，改善可读性。
 - `cpufreq`，`percluster`写入器的变种。大部分功能相同，不同的是写入值=设定值*100000，缩短了频率参数序列的长度，以及带有写入失败重试以处理新的最低频率高于原有的最高频率。
@@ -208,6 +217,7 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
   - 减少大部分传感器线程在大核的唤醒
   - 禁用大多数内核态和用户态boost、热插拔
   - `interactive`和`schedutil`调速器、`core_ctl`、任务调度器外围参数一致化
+  (注：v3已经全面切换到powersave)
 - 为指纹识别提供最大性能(EAS平台)
 
 ![为指纹识别提供最大性能](./media/fingerprint.png)
