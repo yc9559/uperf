@@ -14,9 +14,14 @@ wait_until_login() {
     done
     rm "$test_file"
 }
-wait_until_login
-rm -rf /sdcard/yc/uperf/ /data/adb/*/uperf
-chmod 666 /data/powercfg*
-rm -rf /data/powercfg*
-rm -rf /sdcard/yc
-rm -rf /sdcard/Android/yc
+on_remove() {
+    #We could test it future when using newer Magisk
+    #wait_until_login
+    rm -rf /sdcard/yc/uperf/ /data/adb/modules/uperf /data/adb/modules_update/uperf
+    chmod 666 /data/powercfg*
+    rm -rf /data/powercfg*
+    rm -rf /sdcard/yc/uperf #not remove dfps config
+    rm -rf /sdcard/Android/yc/uperf
+
+}
+(on_remove &)

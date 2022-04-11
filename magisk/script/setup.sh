@@ -73,7 +73,6 @@ install_uperf() {
     fi
 
     mkdir -p $USER_PATH
-    rm -rf /sdcard/yc/uperf
     mv -f $USER_PATH/uperf.json $USER_PATH/uperf.json.bak
     cp -f $MODULE_PATH/config/$cfgname.json $USER_PATH/uperf.json
     [ ! -e "$USER_PATH/perapp_powermode.txt" ] && cp $MODULE_PATH/config/perapp_powermode.txt $USER_PATH/perapp_powermode.txt
@@ -105,11 +104,28 @@ install_powerhal_stub() {
         fi
     done
 }
+#grep_prop comes from https://github.com/topjohnwu/Magisk/blob/master/scripts/util_functions.sh#L30
+grep_prop() {
+    local REGEX="s/^$1=//p"
+    shift
+    local FILES=$@
+    [ -z "$FILES" ] && FILES='/system/build.prop'
+    cat $FILES 2>/dev/null | dos2unix | sed -n "$REGEX" | head -n 1
+}
+
+# get module version
+module_version="$(grep_prop version $MODULE_PATH/module.prop)"
+# get module name
+module_name="$(grep_prop name $MODULE_PATH/module.prop)"
+# get module id
+module_id="$(grep_prop id $MODULE_PATH/module.prop)"
+# get module author
+module_author="$(grep_prop author $MODULE_PATH/module.prop)"
 
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
-echo "* Author: Matt Yang"
-echo "* Version: v3(22.04.04)"
+echo "* Author: $module_author"
+echo "* Version: $module_version"
 echo ""
 
 echo "- Installing uperf"
@@ -117,5 +133,4 @@ install_uperf
 
 echo "- Installing perfhal stub"
 install_powerhal_stub
-magisk --install-module $BASEDIR/../sfanalysis-magisk.zip
 set_permissions
