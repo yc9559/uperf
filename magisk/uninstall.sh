@@ -15,8 +15,7 @@ wait_until_login() {
     rm "$test_file"
 }
 on_remove() {
-    #We could test it future when using newer Magisk
-    #wait_until_login
+    wait_until_login
     rm -rf /sdcard/yc/uperf/ /data/adb/modules/uperf /data/adb/modules_update/uperf
     chmod 666 /data/powercfg*
     rm -rf /data/powercfg*

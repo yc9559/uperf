@@ -2,5 +2,10 @@
 # Example: Change dpi
 # ro.sf.lcd_density=320
 
+#Why MIUI love usap????
+#Maybe useful in some time, but it was not enabled by OEMs before
+#Now only Redmi K50 Series enabled it by default?
+# persist.sys.usap_pool_enabled=false
+
 # headroom for GC
 dalvik.vm.heapminfree=2m

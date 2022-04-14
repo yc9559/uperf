@@ -13,7 +13,7 @@
 - 监听注入到Surfaceflinger的hook发送的通知，识别渲染开始、滞后、结束
 - 支持Android 6.0 - 12
 - 支持arm64-v8a
-- 支持Magisk方式一键安装，版本不低于23.0
+- 支持Magisk方式一键安装，版本不低于20.4+
 - 不依赖于Magisk，可以手动方式安装
 - 除非SfAnalysis注入失败，大多数情况SELinux可保持`enforcing`
 - 不依赖于任何Android应用层框架以及第三方内核
@@ -217,7 +217,6 @@ Sfanalysis是一个独立于Uperf的模块，注入到surfaceflinger进行修改
   - 减少大部分传感器线程在大核的唤醒
   - 禁用大多数内核态和用户态boost、热插拔
   - `interactive`和`schedutil`调速器、`core_ctl`、任务调度器外围参数一致化
-  (注：v3已经全面切换到powersave)
 - 为指纹识别提供最大性能(EAS平台)
 
 ![为指纹识别提供最大性能](./media/fingerprint.png)
