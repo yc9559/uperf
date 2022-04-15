@@ -32,6 +32,8 @@ echo "sh $SCRIPT_PATH/powercfg_main.sh \"\$1\"" >>/data/powercfg.sh
 wait_until_login
 
 sh $SCRIPT_PATH/powercfg_once.sh
+#Scene 3rd Scheduler Adapter Config
+cat $SCRIPT_PATH/powercfg.json >/data/powercfg.json
 
 # raise inotify limit in case file sync existed
 lock_val "1048576" /proc/sys/fs/inotify/max_queued_events

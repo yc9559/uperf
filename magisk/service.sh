@@ -26,4 +26,5 @@ crash_recuser() {
 }
 
 (crash_recuser &)
+
 sh $BASEDIR/script/initsvc.sh

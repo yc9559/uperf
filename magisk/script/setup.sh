@@ -57,7 +57,8 @@ set_permissions() {
 install_uperf() {
     echo "- ro.board.platform=$(getprop ro.board.platform)"
     echo "- ro.product.board=$(getprop ro.product.board)"
-
+    chmod 444 /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo*
+    chmod 444 /sys/devices/system/cpu/cpufreq/policy*/cpuinfo*
     local target
     local cfgname
     target="$(getprop ro.board.platform)"
@@ -103,11 +104,28 @@ install_powerhal_stub() {
         fi
     done
 }
+#grep_prop comes from https://github.com/topjohnwu/Magisk/blob/master/scripts/util_functions.sh#L30
+grep_prop() {
+    local REGEX="s/^$1=//p"
+    shift
+    local FILES=$@
+    [ -z "$FILES" ] && FILES='/system/build.prop'
+    cat $FILES 2>/dev/null | dos2unix | sed -n "$REGEX" | head -n 1
+}
+
+# get module version
+module_version="$(grep_prop version $MODULE_PATH/module.prop)"
+# get module name
+module_name="$(grep_prop name $MODULE_PATH/module.prop)"
+# get module id
+module_id="$(grep_prop id $MODULE_PATH/module.prop)"
+# get module author
+module_author="$(grep_prop author $MODULE_PATH/module.prop)"
 
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
-echo "* Author: Matt Yang"
-echo "* Version: v3(22.04.09)"
+echo "* Author: $module_author"
+echo "* Version: $module_version"
 echo ""
 
 echo "- Installing uperf"
@@ -115,5 +133,4 @@ install_uperf
 
 echo "- Installing perfhal stub"
 install_powerhal_stub
-
 set_permissions
