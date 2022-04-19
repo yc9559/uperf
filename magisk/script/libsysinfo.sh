@@ -114,7 +114,15 @@ _get_msm8952_type() {
         ;;
     esac
 }
-
+_get_mt6833_type() {
+    local b_max
+    b_max="$(_get_maxfreq 7)"
+    if [ "$b_max" -ge 2300000 ]; then
+        echo "mtd810"
+    else
+        echo "mtd700"
+    fi
+}
 _get_mt6853_type() {
     local b_max
     b_max="$(get_maxfreq 6)"
@@ -132,6 +140,15 @@ _get_mt6873_type() {
         echo "mtd820"
     else
         echo "mtd800"
+    fi
+}
+_get_mt6885_type() {
+    local b_max
+    b_max="$(get_maxfreq 4)"
+    if [ "$b_max" -gt 2500000 ]; then
+        echo "mtd1000"
+    else
+        echo "mtd1000l"
     fi
 }
 _get_mt6893_type() {
@@ -203,9 +220,9 @@ get_config_name() {
     "universal7420") echo "e7420" ;;
     "mt6768") echo "mtg80" ;; # Helio P65(mt6768)/G70(mt6769v)/G80(mt6769t)/G85(mt6769z)
     "mt6785") echo "mtg90t" ;;
-    "mt6833p") echo "mtd810" ;; # D810
-    "mt6833v") echo "mtd810" ;; # D810
-    "mt6833") echo "mtd810" ;;  # D810
+    "mt6833p") echo "$(_get_mt6833_type)" ;; # D810
+    "mt6833v") echo "$(_get_mt6833_type)" ;; # D810
+    "mt6833") echo "$(_get_mt6833_type)" ;;  # D810
     "mt6853") echo "$(_get_mt6853_type)" ;;
     "mt6873") echo "$(_get_mt6873_type)" ;;
     "mt6875") echo "$(_get_mt6873_type)" ;;
