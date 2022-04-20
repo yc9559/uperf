@@ -19,6 +19,9 @@ MODDIR=${0%/*}
 if [ -f "$MODDIR/flag/need_recuser" ]; then
     rm -f $MODDIR/flag/need_recuser
     true >$MODDIR/disable
+    chmod 666 /data/powercfg.sh
+    chmod 666 /data/powercfg.json
+    rm -rf /data/powercfg.sh /data/powercfg.json
 else
     true >$MODDIR/flag/need_recuser
 fi
