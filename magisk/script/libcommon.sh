@@ -23,9 +23,10 @@
 lock_val() {
     for p in $2; do
         if [ -f "$p" ]; then
-            chmod 0666 "$p" 2>/dev/null
+            chown root:root "$p"
+            chmod 0666 "$p"
             echo "$1" >"$p"
-            chmod 0444 "$p" 2>/dev/null
+            chmod 0444 "$p"
         fi
     done
 }
@@ -34,7 +35,7 @@ lock_val() {
 mutate() {
     for p in $2; do
         if [ -f "$p" ]; then
-            chmod 0666 "$p" 2>/dev/null
+            chmod 0666 "$p"
             echo "$1" >"$p"
         fi
     done
@@ -43,7 +44,8 @@ mutate() {
 # $1:file path
 lock() {
     if [ -f "$1" ]; then
-        chmod 0444 "$1" 2>/dev/null
+        chown root:root "$p"
+        chmod 0444 "$1"
     fi
 }
 

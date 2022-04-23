@@ -22,5 +22,3 @@ if [ -f "$MODDIR/flag/need_recuser" ]; then
 else
     true >$MODDIR/flag/need_recuser
 fi
-
-sh $MODDIR/script/powercfg_early.sh

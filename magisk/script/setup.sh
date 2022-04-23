@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 
-# Runonce after boot, to speed up the transition of power modes in powercfg
-
 BASEDIR="$(dirname $(readlink -f "$0"))"
 . $BASEDIR/pathinfo.sh
 . $BASEDIR/libsysinfo.sh
@@ -30,12 +28,9 @@ abort() {
 
 # $1:file_node $2:owner $3:group $4:permission $5:secontext
 set_perm() {
-    local con
     chown $2:$3 $1
     chmod $4 $1
-    con=$5
-    [ -z $con ] && con=u:object_r:system_file:s0
-    chcon $con $1
+    chcon $5 $1
 }
 
 # $1:directory $2:owner $3:group $4:dir_permission $5:file_permission $6:secontext
@@ -48,17 +43,11 @@ set_perm_recursive() {
     done
 }
 
-set_permissions() {
-    set_perm_recursive $BIN_PATH 0 0 0755 0755 u:object_r:system_file:s0
-    set_perm_recursive $MODULE_PATH/system/vendor/etc 0 0 0755 0644 u:object_r:vendor_configs_file:s0
-    set_perm_recursive $MODULE_PATH/zygisk 0 0 0755 0644 u:object_r:system_file:s0
-}
-
 install_uperf() {
+    echo "- Finding platform specified config"
     echo "- ro.board.platform=$(getprop ro.board.platform)"
     echo "- ro.product.board=$(getprop ro.product.board)"
-    chmod 444 /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo*
-    chmod 444 /sys/devices/system/cpu/cpufreq/policy*/cpuinfo*
+
     local target
     local cfgname
     target="$(getprop ro.board.platform)"
@@ -72,65 +61,21 @@ install_uperf() {
         abort "! Target [$target] not supported."
     fi
 
+    echo "- Uperf config is located at $USER_PATH"
     mkdir -p $USER_PATH
     mv -f $USER_PATH/uperf.json $USER_PATH/uperf.json.bak
     cp -f $MODULE_PATH/config/$cfgname.json $USER_PATH/uperf.json
     [ ! -e "$USER_PATH/perapp_powermode.txt" ] && cp $MODULE_PATH/config/perapp_powermode.txt $USER_PATH/perapp_powermode.txt
     rm -rf $MODULE_PATH/config
-    echo "- Uperf config is located at $USER_PATH"
-}
 
-install_powerhal_stub() {
-    # do not place empty json if it doesn't exist in system
-    # vendor/etc/powerhint.json: android perf hal
-    # vendor/etc/powerscntbl.cfg: mediatek perf hal (android 9)
-    # vendor/etc/powerscntbl.xml: mediatek perf hal (android 10+)
-    # vendor/etc/perf/commonresourceconfigs.json: qualcomm perf hal resource
-    # vendor/etc/perf/targetresourceconfigs.json: qualcomm perf hal resource overrides
-    local perfcfgs
-    perfcfgs="
-    vendor/etc/powerhint.json
-    vendor/etc/powerscntbl.cfg
-    vendor/etc/powerscntbl.xml
-    vendor/etc/power_app_cfg.xml
-    vendor/etc/perf/commonresourceconfigs.xml
-    vendor/etc/perf/targetresourceconfigs.xml
-    "
-    for f in $perfcfgs; do
-        if [ ! -f "/$f" ]; then
-            rm "$MODULE_PATH/system/$f"
-        else
-            true >$FLAG_PATH/enable_perfhal_stub
-        fi
-    done
+    set_perm_recursive $BIN_PATH 0 0 0755 0755 u:object_r:system_file:s0
 }
-#grep_prop comes from https://github.com/topjohnwu/Magisk/blob/master/scripts/util_functions.sh#L30
-grep_prop() {
-    local REGEX="s/^$1=//p"
-    shift
-    local FILES=$@
-    [ -z "$FILES" ] && FILES='/system/build.prop'
-    cat $FILES 2>/dev/null | dos2unix | sed -n "$REGEX" | head -n 1
-}
-
-# get module version
-module_version="$(grep_prop version $MODULE_PATH/module.prop)"
-# get module name
-module_name="$(grep_prop name $MODULE_PATH/module.prop)"
-# get module id
-module_id="$(grep_prop id $MODULE_PATH/module.prop)"
-# get module author
-module_author="$(grep_prop author $MODULE_PATH/module.prop)"
 
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
-echo "* Author: $module_author"
-echo "* Version: $module_version"
+echo "* Author: Matt Yang"
+echo "* Version: v3(22.04.23)"
 echo ""
 
 echo "- Installing uperf"
 install_uperf
-
-echo "- Installing perfhal stub"
-install_powerhal_stub
-set_permissions

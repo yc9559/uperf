@@ -76,18 +76,6 @@ set_corectl_param() {
     done
 }
 
-# $1:upmigrate $2:downmigrate $3:group_upmigrate $4:group_downmigrate
-set_sched_migrate() {
-    for d in kernel walt; do
-        lock_val "$2" /proc/sys/$d/sched_downmigrate
-        lock_val "$1" /proc/sys/$d/sched_upmigrate
-        lock_val "$2" /proc/sys/$d/sched_downmigrate
-        lock_val "$4" /proc/sys/$d/sched_group_downmigrate
-        lock_val "$3" /proc/sys/$d/sched_group_upmigrate
-        lock_val "$4" /proc/sys/$d/sched_group_downmigrate
-    done
-}
-
 # stop before updating cfg
 perfhal_stop() {
     for i in 0 1 2 3 4; do

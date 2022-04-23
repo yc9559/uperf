@@ -1,0 +1,7 @@
+# This file will be read by resetprop
+# Example: Change dpi
+# ro.sf.lcd_density=320
+
+# headroom for GC
+dalvik.vm.heapminfree=8m
+dalvik.vm.heapmaxfree=12m

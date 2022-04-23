@@ -44,41 +44,35 @@ unify_cgroup() {
 
     # work with uperf/ContextScheduler
     change_task_cgroup "surfaceflinger" "top-app" "cpuset"
-    change_task_cgroup "system_server" "top-app" "cpuset"
+    change_task_cgroup "system_server" "foreground" "cpuset"
+    change_thread_cgroup "system_server" "^android." "" "cpuset"
+    change_thread_cgroup "system_server" "^Binder" "" "cpuset"
+    change_task_cgroup "composer|allocator" "foreground" "cpuset"
     change_task_cgroup "android.hardware.media|android.hardware.audio" "top-app" "cpuset"
-    change_task_cgroup "kswapd0|kcompactd0|ion-pool-" "foreground" "cpuset"
     change_task_cgroup "netd|audioserver" "background" "cpuset"
     change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
     change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|mali_kbase_|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
 }
 
-unify_cpufreq() {
-    # no msm_performance limit
-    set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
-    set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
-
-    # stop sched core_ctl
-    set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
+unify_sched() {
+    # reduce migration
+    for d in kernel walt; do
+        mutate "30" /proc/sys/$d/sched_downmigrate
+        mutate "90" /proc/sys/$d/sched_upmigrate
+        mutate "30" /proc/sys/$d/sched_downmigrate
+        mutate "30 30" /proc/sys/$d/sched_downmigrate
+        mutate "90 90" /proc/sys/$d/sched_upmigrate
+        mutate "30 30" /proc/sys/$d/sched_downmigrate
+        mutate "30" /proc/sys/$d/sched_group_downmigrate
+        mutate "90" /proc/sys/$d/sched_group_upmigrate
+        mutate "30" /proc/sys/$d/sched_group_downmigrate
+    done
 
     # clear cpu load scale factor
     for i in 0 1 2 3 4 5 6 7 8 9; do
-        lock_val "0" /sys/devices/system/cpu/cpu$i/sched_load_boost
+        mutate "0" /sys/devices/system/cpu/cpu$i/sched_load_boost
     done
-}
-
-unify_sched() {
-    # disable sched global placement boost
-    for d in kernel walt; do
-        lock_val "0" /proc/sys/$d/sched_boost
-        lock_val "0" /proc/sys/$d/sched_force_lb_enable
-        lock_val "0" /proc/sys/$d/sched_walt_rotate_big_tasks
-        lock_val "0" /proc/sys/$d/sched_stask_to_big
-    done
-
-    # 90/60
-    set_sched_migrate "90" "60" "90" "60"
-    set_sched_migrate "90 90" "60 60" "90" "60"
 }
 
 disable_hotplug() {
@@ -97,6 +91,9 @@ disable_hotplug() {
     lock_val "0" /sys/module/autosmp/parameters/enabled
     lock_val "0" /sys/kernel/zen_decision/enabled
 
+    # stop sched core_ctl
+    set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
+
     # bring all cores online
     for i in 0 1 2 3 4 5 6 7 8 9; do
         lock_val "1" /sys/devices/system/cpu/cpu$i/online
@@ -110,6 +107,10 @@ disable_kernel_boost() {
     lock_val "0" "/sys/module/cpu_boost/parameters/*"
     lock_val "0" "/sys/module/msm_performance/parameters/*"
     lock_val "0" "/proc/sys/walt/input_boost/*"
+
+    # no msm_performance limit
+    set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
+    set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
 
     # MediaTek
     # policy_status
@@ -125,21 +126,14 @@ disable_kernel_boost() {
     # [9] PPM_POLICY_SYS_BOOST: disabled
     # [10] PPM_POLICY_HICA: ?
     # Usage: echo <policy_idx> <1(enable)/0(disable)> > /proc/ppm/policy_status
-    lock_val "0" /proc/ppm/enabled
-    # used by uperf
-    # mutate "6 1" /proc/ppm/policy_status
+    # use cpufreq interface with PPM_POLICY_HARD_USER_LIMIT enabled, thanks to helloklf@github
+    lock_val "1" /proc/ppm/enabled
+    lock_val "6 1" /proc/ppm/policy_status
+    lock_val "0" /proc/perfmgr/tchbst/user/usrtch
+    lock "/proc/ppm/policy/*"
 
     # Samsung
     mutate "0" "/sys/class/input_booster/*"
-
-    # Samsung EPIC interfaces, used by uperf
-    # mutate "0" /dev/cluster0_freq_min
-    # mutate "0" /dev/cluster1_freq_min
-    # mutate "0" /dev/cluster2_freq_min
-    # lock_val "0" /dev/bus_throughput
-    # lock_val "0" /dev/gpu_freq_min
-    # Samsung /kernel/sched/ems/...
-    mutate "0" /sys/kernel/ems/eff_mode
 
     # Oneplus
     lock_val "N" "/sys/module/control_center/parameters/*"
@@ -156,6 +150,12 @@ disable_kernel_boost() {
 }
 
 disable_userspace_boost() {
+    # xiaomi vip-task scheduler override
+    chmod 0000 /dev/migt
+    for f in /sys/module/migt/parameters/*; do
+        chmod 0000 $f
+    done
+
     # xiaomi perfservice
     stop vendor.perfservice
     stop miuibooster
@@ -167,34 +167,65 @@ disable_userspace_boost() {
     # Qualcomm perfd
     stop perfd 2>/dev/null
 
-    # Qualcomm&MTK perfhal
-    # keep perfhal running with empty config file in magisk mode
-    [ ! -f "$FLAG_PATH/enable_perfhal_stub" ] && perfhal_stop
+    # work with uperf/ContextScheduler
+    lock_val "0" /sys/module/mtk_fpsgo/parameters/boost_affinity
+    lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
 
-    # MTK
-    # stop fpsgo
-    # yes, it will automatically respawn, don't let it die
-    killall vendor.mediatek.hardware.mtkpower@1.0-service
+    # Qualcomm&MTK perfhal
+    perfhal_stop
+
+    # libperfmgr
+    stop vendor.power-hal-1-0
+    stop vendor.power-hal-1-1
+    stop vendor.power-hal-1-2
+    stop vendor.power-hal-1-3
+    stop vendor.power-hal-aidl
 }
 
-disable_aggressive_thermal() {
+restart_userspace_boost() {
+    # Qualcomm&MTK perfhal
+    perfhal_start
+
+    # libperfmgr
+    start vendor.power-hal-1-0
+    start vendor.power-hal-1-1
+    start vendor.power-hal-1-2
+    start vendor.power-hal-1-3
+    start vendor.power-hal-aidl
+}
+
+disable_userspace_thermal() {
     # prohibit mi_thermald use cpu thermal interface
-    # yes, kill twice
-    chmod 0444 /sys/devices/virtual/thermal/thermal_message/cpu_limits
+    for i in 0 2 4 6 7; do
+        lock_val "cpu$i 9999999" /sys/devices/virtual/thermal/thermal_message/cpu_limits
+    done
     chmod 0444 /sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq
+}
+
+restart_userspace_thermal() {
+    # yes, let it respawn
     killall mi_thermald
 }
 
 clear_log
-log "PATH=$PATH"
-log "sh=$(which sh)"
+exec &>$LOG_FILE
+echo "PATH=$PATH"
+echo "sh=$(which sh)"
 
-disable_userspace_boost
+# set permission
 disable_kernel_boost
 disable_hotplug
-unify_cpufreq
 unify_sched
-disable_aggressive_thermal
+
+disable_userspace_thermal
+restart_userspace_thermal
+disable_userspace_boost
+restart_userspace_boost
+
+# unify value
+disable_kernel_boost
+disable_hotplug
+unify_sched
 
 # make sure that all the related cpu is online
 rebuild_process_scan_cache
