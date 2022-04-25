@@ -127,10 +127,16 @@ disable_kernel_boost() {
     # [10] PPM_POLICY_HICA: ?
     # Usage: echo <policy_idx> <1(enable)/0(disable)> > /proc/ppm/policy_status
     # use cpufreq interface with PPM_POLICY_HARD_USER_LIMIT enabled, thanks to helloklf@github
+   # use cpufreq interface with PPM_POLICY_HARD_USER_LIMIT enabled, thanks to helloklf@github
     lock_val "1" /proc/ppm/enabled
+    for i in 0 1 2 3 4 5 6 7 8 9 10; do
+        lock_val "$i 0" /proc/ppm/policy_status
+    done
+    # used by uperf
     lock_val "6 1" /proc/ppm/policy_status
-    lock_val "0" /proc/perfmgr/tchbst/user/usrtch
-    lock "/proc/ppm/policy/*"
+    lock_val "enable 0" /proc/perfmgr/tchbst/user/usrtch
+    lock /proc/ppm/policy/*
+    lock /proc/ppm/*
 
     # Samsung
     mutate "0" "/sys/class/input_booster/*"
