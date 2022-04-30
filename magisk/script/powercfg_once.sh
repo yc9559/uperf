@@ -33,7 +33,9 @@ unify_cgroup() {
         lock_val "0" /dev/cpuctl/$g/cpu.uclamp.min
         lock_val "0" /dev/cpuctl/$g/cpu.uclamp.latency_sensitive
     done
-    for cg in stune cpuctl; do
+    
+    # clear top-app
+    for cg in cpuset stune cpuctl; do
         for p in $(cat /dev/$cg/top-app/tasks); do
             echo $p >/dev/$cg/foreground/tasks
         done
@@ -48,31 +50,11 @@ unify_cgroup() {
     change_thread_cgroup "system_server" "^android." "" "cpuset"
     change_thread_cgroup "system_server" "^Binder" "" "cpuset"
     change_task_cgroup "composer|allocator" "foreground" "cpuset"
-    change_task_cgroup "android.hardware.media|android.hardware.audio" "top-app" "cpuset"
-    change_task_cgroup "netd|audioserver" "background" "cpuset"
+    change_task_cgroup "android.hardware.media" "top-app" "cpuset"
+    change_task_cgroup "netd" "background" "cpuset"
     change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
     change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|mali_kbase_|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
-}
-
-unify_sched() {
-    # reduce migration
-    for d in kernel walt; do
-        mutate "30" /proc/sys/$d/sched_downmigrate
-        mutate "90" /proc/sys/$d/sched_upmigrate
-        mutate "30" /proc/sys/$d/sched_downmigrate
-        mutate "30 30" /proc/sys/$d/sched_downmigrate
-        mutate "90 90" /proc/sys/$d/sched_upmigrate
-        mutate "30 30" /proc/sys/$d/sched_downmigrate
-        mutate "30" /proc/sys/$d/sched_group_downmigrate
-        mutate "90" /proc/sys/$d/sched_group_upmigrate
-        mutate "30" /proc/sys/$d/sched_group_downmigrate
-    done
-
-    # clear cpu load scale factor
-    for i in 0 1 2 3 4 5 6 7 8 9; do
-        mutate "0" /sys/devices/system/cpu/cpu$i/sched_load_boost
-    done
 }
 
 disable_hotplug() {
@@ -129,7 +111,7 @@ disable_kernel_boost() {
     # use cpufreq interface with PPM_POLICY_HARD_USER_LIMIT enabled, thanks to helloklf@github
     lock_val "1" /proc/ppm/enabled
     lock_val "6 1" /proc/ppm/policy_status
-    lock_val "0" /proc/perfmgr/tchbst/user/usrtch
+    lock_val "enable 0" /proc/perfmgr/tchbst/user/usrtch
     lock "/proc/ppm/policy/*"
 
     # Samsung
@@ -170,6 +152,7 @@ disable_userspace_boost() {
     # work with uperf/ContextScheduler
     lock_val "0" /sys/module/mtk_fpsgo/parameters/boost_affinity
     lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
+    lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
 
     # Qualcomm&MTK perfhal
     perfhal_stop
@@ -215,7 +198,6 @@ echo "sh=$(which sh)"
 # set permission
 disable_kernel_boost
 disable_hotplug
-unify_sched
 
 disable_userspace_thermal
 restart_userspace_thermal
@@ -225,7 +207,6 @@ restart_userspace_boost
 # unify value
 disable_kernel_boost
 disable_hotplug
-unify_sched
 
 # make sure that all the related cpu is online
 rebuild_process_scan_cache
