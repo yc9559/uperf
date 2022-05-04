@@ -33,7 +33,7 @@ unify_cgroup() {
         lock_val "0" /dev/cpuctl/$g/cpu.uclamp.min
         lock_val "0" /dev/cpuctl/$g/cpu.uclamp.latency_sensitive
     done
-    
+
     # clear top-app
     for cg in cpuset stune cpuctl; do
         for p in $(cat /dev/$cg/top-app/tasks); do
@@ -45,16 +45,44 @@ unify_cgroup() {
     rmdir /dev/cpuset/foreground/boost
 
     # work with uperf/ContextScheduler
-    change_task_cgroup "surfaceflinger" "top-app" "cpuset"
+    change_task_cgroup "surfaceflinger" "foreground" "cpuset"
+    change_thread_cgroup "surfaceflinger" "^Binder" "" "cpuset"
     change_task_cgroup "system_server" "foreground" "cpuset"
-    change_thread_cgroup "system_server" "^android." "" "cpuset"
     change_thread_cgroup "system_server" "^Binder" "" "cpuset"
+    change_thread_cgroup "system_server" "^android.bg" "" "cpuset"
     change_task_cgroup "composer|allocator" "foreground" "cpuset"
     change_task_cgroup "android.hardware.media" "top-app" "cpuset"
-    change_task_cgroup "netd" "background" "cpuset"
+    change_task_cgroup "netd" "foreground" "cpuset"
     change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
-    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|mali_kbase_|ged_" "background" "cpuset"
+    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
+}
+
+unify_sched() {
+    for d in kernel walt; do
+        lock_val "0" /proc/sys/$d/sched_force_lb_enable
+    done
+}
+
+unify_cpufreq() {
+    # unify hmp interactive governor, only 2+2 4+2 4+4
+    set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
+    set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1"
+    set_governor_param "interactive/enable_prediction" "0:1 2:1 4:1"
+    set_governor_param "interactive/ignore_hispeed_on_notif" "0:1 2:1 4:1"
+    set_governor_param "interactive/fast_ramp_down" "0:0 2:0 4:0"
+    set_governor_param "interactive/boostpulse_duration" "0:0 2:0 4:0"
+    set_governor_param "interactive/boost" "0:0 2:0 4:0"
+    set_governor_param "interactive/above_hispeed_delay" "0:0 2:0 4:0"
+    set_governor_param "interactive/hispeed_freq" "0:0 2:0 4:0"
+    set_governor_param "interactive/go_hispeed_load" "0:90 2:90 4:90"
+    set_governor_param "interactive/target_loads" "0:80 2:80 4:80"
+    set_governor_param "interactive/min_sample_time" "0:0 2:0 4:0"
+    set_governor_param "interactive/max_freq_hysteresis" "0:0 2:0 4:0"
+}
+
+unify_devfreq() {
+    mutate "9999000000" "/sys/class/devfreq/*/max_freq"
 }
 
 disable_hotplug() {
@@ -110,9 +138,13 @@ disable_kernel_boost() {
     # Usage: echo <policy_idx> <1(enable)/0(disable)> > /proc/ppm/policy_status
     # use cpufreq interface with PPM_POLICY_HARD_USER_LIMIT enabled, thanks to helloklf@github
     lock_val "1" /proc/ppm/enabled
+    for i in 0 1 2 3 4 5 6 7 8 9 10; do
+        lock_val "$i 0" /proc/ppm/policy_status
+    done
     lock_val "6 1" /proc/ppm/policy_status
     lock_val "enable 0" /proc/perfmgr/tchbst/user/usrtch
     lock "/proc/ppm/policy/*"
+    lock "/proc/ppm/*"
 
     # Samsung
     mutate "0" "/sys/class/input_booster/*"
@@ -150,7 +182,8 @@ disable_userspace_boost() {
     stop perfd 2>/dev/null
 
     # work with uperf/ContextScheduler
-    lock_val "0" /sys/module/mtk_fpsgo/parameters/boost_affinity
+    lock_val "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"
+    lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
     lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
     lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
 
@@ -191,13 +224,17 @@ restart_userspace_thermal() {
 }
 
 clear_log
-exec &>$LOG_FILE
+exec 1>$LOG_FILE
+# exec 2>&1
 echo "PATH=$PATH"
 echo "sh=$(which sh)"
 
 # set permission
 disable_kernel_boost
 disable_hotplug
+unify_sched
+unify_cpufreq
+unify_devfreq
 
 disable_userspace_thermal
 restart_userspace_thermal
@@ -207,6 +244,9 @@ restart_userspace_boost
 # unify value
 disable_kernel_boost
 disable_hotplug
+unify_sched
+unify_cpufreq
+unify_devfreq
 
 # make sure that all the related cpu is online
 rebuild_process_scan_cache
