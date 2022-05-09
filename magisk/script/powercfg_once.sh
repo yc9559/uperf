@@ -24,16 +24,6 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 . $BASEDIR/libcgroup.sh
 
 unify_cgroup() {
-    # clear stune & uclamp
-    for g in background foreground top-app; do
-        lock_val "0" /dev/stune/$g/schedtune.sched_boost_no_override
-        lock_val "0" /dev/stune/$g/schedtune.boost
-        lock_val "0" /dev/stune/$g/schedtune.prefer_idle
-        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.sched_boost_no_override
-        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.min
-        lock_val "0" /dev/cpuctl/$g/cpu.uclamp.latency_sensitive
-    done
-
     # clear top-app
     for cg in cpuset stune cpuctl; do
         for p in $(cat /dev/$cg/top-app/tasks); do
@@ -48,11 +38,10 @@ unify_cgroup() {
     change_task_cgroup "surfaceflinger" "foreground" "cpuset"
     change_thread_cgroup "surfaceflinger" "^Binder" "" "cpuset"
     change_task_cgroup "system_server" "foreground" "cpuset"
-    change_thread_cgroup "system_server" "^Binder" "" "cpuset"
     change_thread_cgroup "system_server" "^android.bg" "" "cpuset"
     change_task_cgroup "composer|allocator" "foreground" "cpuset"
-    change_task_cgroup "android.hardware.media" "top-app" "cpuset"
     change_task_cgroup "netd" "foreground" "cpuset"
+    change_task_cgroup "android.hardware.media" "background" "cpuset"
     change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
     change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
@@ -64,25 +53,17 @@ unify_sched() {
     done
 }
 
-unify_cpufreq() {
-    # unify hmp interactive governor, only 2+2 4+2 4+4
-    set_governor_param "interactive/use_sched_load" "0:1 2:1 4:1"
-    set_governor_param "interactive/use_migration_notif" "0:1 2:1 4:1"
-    set_governor_param "interactive/enable_prediction" "0:1 2:1 4:1"
-    set_governor_param "interactive/ignore_hispeed_on_notif" "0:1 2:1 4:1"
-    set_governor_param "interactive/fast_ramp_down" "0:0 2:0 4:0"
-    set_governor_param "interactive/boostpulse_duration" "0:0 2:0 4:0"
-    set_governor_param "interactive/boost" "0:0 2:0 4:0"
-    set_governor_param "interactive/above_hispeed_delay" "0:0 2:0 4:0"
-    set_governor_param "interactive/hispeed_freq" "0:0 2:0 4:0"
-    set_governor_param "interactive/go_hispeed_load" "0:90 2:90 4:90"
-    set_governor_param "interactive/target_loads" "0:80 2:80 4:80"
-    set_governor_param "interactive/min_sample_time" "0:0 2:0 4:0"
-    set_governor_param "interactive/max_freq_hysteresis" "0:0 2:0 4:0"
-}
-
 unify_devfreq() {
-    mutate "9999000000" "/sys/class/devfreq/*/max_freq"
+    for d in /sys/class/devfreq/*; do
+        local maxfreq="0"
+        for f in $(cat $d/available_frequencies); do
+            [ "$f" -gt "$maxfreq" ] && maxfreq="$f"
+        done
+        [ "$maxfreq" -gt "0" ] && mutate "$maxfreq" "$d/max_freq"
+    done
+    for d in DDR LLCC L3; do
+        mutate "9999000000" "/sys/devices/system/cpu/bus_dcvs/$d/*/max_freq"
+    done
 }
 
 disable_hotplug() {
@@ -116,11 +97,8 @@ disable_kernel_boost() {
     lock_val "0" "/sys/devices/system/cpu/cpu_boost/parameters/*"
     lock_val "0" "/sys/module/cpu_boost/parameters/*"
     lock_val "0" "/sys/module/msm_performance/parameters/*"
+    lock_val "0" "/sys/kernel/msm_performance/parameters/*"
     lock_val "0" "/proc/sys/walt/input_boost/*"
-
-    # no msm_performance limit
-    set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
-    set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
 
     # MediaTek
     # policy_status
@@ -186,6 +164,7 @@ disable_userspace_boost() {
     lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
     lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
     lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
+    # lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable
 
     # Qualcomm&MTK perfhal
     perfhal_stop
@@ -211,11 +190,12 @@ restart_userspace_boost() {
 }
 
 disable_userspace_thermal() {
+    # yes, let it respawn
+    killall mi_thermald
     # prohibit mi_thermald use cpu thermal interface
     for i in 0 2 4 6 7; do
-        lock_val "cpu$i 9999999" /sys/devices/virtual/thermal/thermal_message/cpu_limits
+        lock_val "cpu$i 9999000" /sys/devices/virtual/thermal/thermal_message/cpu_limits
     done
-    chmod 0444 /sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq
 }
 
 restart_userspace_thermal() {
@@ -233,7 +213,6 @@ echo "sh=$(which sh)"
 disable_kernel_boost
 disable_hotplug
 unify_sched
-unify_cpufreq
 unify_devfreq
 
 disable_userspace_thermal
@@ -245,7 +224,6 @@ restart_userspace_boost
 disable_kernel_boost
 disable_hotplug
 unify_sched
-unify_cpufreq
 unify_devfreq
 
 # make sure that all the related cpu is online

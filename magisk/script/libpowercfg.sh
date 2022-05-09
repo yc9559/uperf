@@ -39,10 +39,6 @@ set_cpufreq_min() {
 # $1:"0:576000 4:710400 7:825600"
 set_cpufreq_max() {
     lock_val "$1" /sys/module/msm_performance/parameters/cpu_max_freq
-}
-
-# $1:"0:576000 4:710400 7:825600"
-set_cpufreq_dyn_max() {
     local key
     local val
     for kv in $1; do

@@ -28,7 +28,7 @@ https://github.com/yc9559/uperf/releases
 ### Magisk方式
 
 1. 下载后通过Magisk Manager刷入，Magisk版本不低于18.0
-2. 重启后查看`/sdcard/Android/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
+2. 重启后查看`/sdcard/Android/yc/uperf/uperf_log.txt`检查uperf是否正常自启动
 
 ### 手动安装
 
@@ -40,7 +40,7 @@ https://github.com/yc9559/uperf/releases
 6. 打开`/data/cache/injector.log`，检查sfanalysis注入是否成功
 7. 如果关联自启动到第三方APP，设置在开机完成后执行`run_uperf.sh`
 8. 如果关联自启动到系统启动脚本，插入`sh /data/uperf/initsvc_uperf.sh`
-9. 重启后查看`/sdcard/yc/uperf/log_uperf.txt`检查uperf是否正常自启动
+9. 重启后查看`/sdcard/yc/uperf/uperf_log.txt`检查uperf是否正常自启动
 
 ### 性能模式切换
 

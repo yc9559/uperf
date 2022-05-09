@@ -3,5 +3,5 @@
 # ro.sf.lcd_density=320
 
 # headroom for GC
-dalvik.vm.heapminfree=8m
-dalvik.vm.heapmaxfree=12m
+dalvik.vm.heapmaxfree=8m
+dalvik.vm.heapminfree=2m
