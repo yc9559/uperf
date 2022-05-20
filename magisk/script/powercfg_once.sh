@@ -35,21 +35,26 @@ unify_cgroup() {
     rmdir /dev/cpuset/foreground/boost
 
     # work with uperf/ContextScheduler
-    change_task_cgroup "surfaceflinger" "foreground" "cpuset"
-    change_thread_cgroup "surfaceflinger" "^Binder" "" "cpuset"
-    change_task_cgroup "system_server" "foreground" "cpuset"
-    change_thread_cgroup "system_server" "^android.bg" "" "cpuset"
-    change_task_cgroup "composer|allocator" "foreground" "cpuset"
-    change_task_cgroup "netd" "foreground" "cpuset"
-    change_task_cgroup "android.hardware.media" "background" "cpuset"
-    change_task_cgroup "vendor.mediatek.hardware" "background" "cpuset"
+    change_task_cgroup "surfaceflinger|system_server" "" "cpuset"
+    change_task_cgroup "netd|allocator|kswapd0|kcompactd0" "foreground" "cpuset"
+    change_task_cgroup "android.hardware.media|vendor.mediatek.hardware" "background" "cpuset"
     change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
 }
 
 unify_sched() {
+    # clear stune & uclamp
+    for d in /dev/stune/*/; do
+        lock_val "0" $d/schedtune.boost
+    done
+    for d in /dev/cpuctl/*/; do
+        lock_val "0" $d/cpu.uclamp.min
+    done
+
     for d in kernel walt; do
         lock_val "0" /proc/sys/$d/sched_force_lb_enable
+        lock_val "255" /proc/sys/$d/sched_busy_hysteresis_enable_cpus
+        lock_val "2000000" /proc/sys/$d/sched_busy_hyst_ns
     done
 }
 
@@ -64,6 +69,13 @@ unify_devfreq() {
     for d in DDR LLCC L3; do
         mutate "9999000000" "/sys/devices/system/cpu/bus_dcvs/$d/*/max_freq"
     done
+}
+
+unify_lpm() {
+    # Qualcomm enter C-state level 3 took ~500us
+    lock_val "0" /sys/module/lpm_levels/parameters/lpm_ipi_prediction
+    lock_val "0" /sys/module/lpm_levels/parameters/lpm_prediction
+    lock_val "2" /sys/module/lpm_levels/parameters/bias_hyst
 }
 
 disable_hotplug() {
@@ -99,6 +111,10 @@ disable_kernel_boost() {
     lock_val "0" "/sys/module/msm_performance/parameters/*"
     lock_val "0" "/sys/kernel/msm_performance/parameters/*"
     lock_val "0" "/proc/sys/walt/input_boost/*"
+
+    # no msm_performance limit
+    set_cpufreq_min "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0"
+    set_cpufreq_max "0:9999000 1:9999000 2:9999000 3:9999000 4:9999000 5:9999000 6:9999000 7:9999000"
 
     # MediaTek
     # policy_status
@@ -164,7 +180,10 @@ disable_userspace_boost() {
     lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
     lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
     lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
-    # lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable
+    lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable
+    lock_val "90" /sys/kernel/fpsgo/fbt/thrm_temp_th
+    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_limit_cpu
+    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_sub_cpu
 
     # Qualcomm&MTK perfhal
     perfhal_stop
@@ -194,7 +213,8 @@ disable_userspace_thermal() {
     killall mi_thermald
     # prohibit mi_thermald use cpu thermal interface
     for i in 0 2 4 6 7; do
-        lock_val "cpu$i 9999000" /sys/devices/virtual/thermal/thermal_message/cpu_limits
+        local maxfreq="$(cat /sys/devices/system/cpu/cpu$i/cpufreq/cpuinfo_max_freq)"
+        [ "$maxfreq" -gt "0" ] && lock_val "cpu$i $maxfreq" /sys/devices/virtual/thermal/thermal_message/cpu_limits
     done
 }
 
@@ -214,6 +234,7 @@ disable_kernel_boost
 disable_hotplug
 unify_sched
 unify_devfreq
+unify_lpm
 
 disable_userspace_thermal
 restart_userspace_thermal
@@ -225,6 +246,7 @@ disable_kernel_boost
 disable_hotplug
 unify_sched
 unify_devfreq
+unify_lpm
 
 # make sure that all the related cpu is online
 rebuild_process_scan_cache

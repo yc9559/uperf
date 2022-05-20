@@ -1,6 +1,6 @@
 {
-  "versionCode": 3,
-  "version": "v3(22.05.09)",
-  "zipUrl": "https://github.com/yc9559/uperf/releases/download/dev-22.05.09/uperf-dev-22.05.09.zip",
+  "versionCode": 220520,
+  "version": "v3",
+  "zipUrl": "https://github.com/yc9559/uperf/releases/download/dev-22.05.20/uperf-dev-22.05.20.zip",
   "changelog": "https://github.com/yc9559/uperf/raw/master/changelog.md"
 }

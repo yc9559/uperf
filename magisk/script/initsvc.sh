@@ -40,4 +40,6 @@ lock_val "1048576" /proc/sys/fs/inotify/max_user_watches
 lock_val "1024" /proc/sys/fs/inotify/max_user_instances
 
 mv $USER_PATH/uperf_log.txt $USER_PATH/uperf_log.txt.bak
+ASAN_LIB="$(ls $BIN_PATH/libclang_rt.asan-*-android.so)"
+export LD_PRELOAD="$ASAN_LIB $BIN_PATH/libc++_shared.so"
 $BIN_PATH/uperf $USER_PATH/uperf.json -o $USER_PATH/uperf_log.txt
