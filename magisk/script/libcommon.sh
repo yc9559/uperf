@@ -32,6 +32,19 @@ lock_val() {
 }
 
 # $1:value $2:filepaths
+mask_val() {
+    touch /data/local/tmp/mount_mask
+    for p in $2; do
+        if [ -f "$p" ]; then
+            umount "$p"
+            chmod 0666 "$p"
+            echo "$1" >"$p"
+            mount --bind /data/local/tmp/mount_mask "$p"
+        fi
+    done
+}
+
+# $1:value $2:filepaths
 mutate() {
     for p in $2; do
         if [ -f "$p" ]; then

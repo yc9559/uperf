@@ -25,20 +25,19 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 
 unify_cgroup() {
     # clear top-app
-    for cg in cpuset stune cpuctl; do
-        for p in $(cat /dev/$cg/top-app/tasks); do
-            echo $p >/dev/$cg/foreground/tasks
-        done
+    for p in $(cat /dev/cpuset/top-app/tasks); do
+        echo $p >/dev/cpuset/foreground/tasks
     done
 
     # unused
     rmdir /dev/cpuset/foreground/boost
 
     # work with uperf/ContextScheduler
-    change_task_cgroup "surfaceflinger|system_server" "" "cpuset"
-    change_task_cgroup "netd|allocator|kswapd0|kcompactd0" "foreground" "cpuset"
-    change_task_cgroup "android.hardware.media|vendor.mediatek.hardware" "background" "cpuset"
-    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|hif_thread|main_thread|ged_" "background" "cpuset"
+    change_task_cgroup "surfaceflinger|system_server" "foreground" "cpuset"
+    change_thread_cgroup "surfaceflinger|system_server" "^Binder" "" "cpuset"
+    change_task_cgroup "netd|allocator" "foreground" "cpuset"
+    change_task_cgroup "hardware.media.c2|vendor.mediatek.hardware" "background" "cpuset"
+    change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|disp_feature|hif_thread|main_thread|rx_thread|ged_" "background" "cpuset"
     change_task_cgroup "pp_event|crtc_" "background" "cpuset"
 }
 
@@ -46,28 +45,26 @@ unify_sched() {
     # clear stune & uclamp
     for d in /dev/stune/*/; do
         lock_val "0" $d/schedtune.boost
+        lock_val "0" $d/schedtune.prefer_idle
     done
     for d in /dev/cpuctl/*/; do
         lock_val "0" $d/cpu.uclamp.min
+        lock_val "0" $d/cpu.uclamp.latency_sensitive
     done
 
     for d in kernel walt; do
-        lock_val "0" /proc/sys/$d/sched_force_lb_enable
-        lock_val "255" /proc/sys/$d/sched_busy_hysteresis_enable_cpus
-        lock_val "2000000" /proc/sys/$d/sched_busy_hyst_ns
+        mask_val "0" /proc/sys/$d/sched_force_lb_enable
     done
 }
 
 unify_devfreq() {
-    for d in /sys/class/devfreq/*; do
-        local maxfreq="0"
-        for f in $(cat $d/available_frequencies); do
-            [ "$f" -gt "$maxfreq" ] && maxfreq="$f"
+    for df in /sys/class/devfreq; do
+        for d in $df/*cpubw $df/*llccbw $df/*cpu-cpu-llcc-bw $df/*cpu-llcc-ddr-bw; do
+            lock_val "9999000000" "$d/max_freq"
         done
-        [ "$maxfreq" -gt "0" ] && mutate "$maxfreq" "$d/max_freq"
     done
     for d in DDR LLCC L3; do
-        mutate "9999000000" "/sys/devices/system/cpu/bus_dcvs/$d/*/max_freq"
+        lock_val "9999000000" "/sys/devices/system/cpu/bus_dcvs/$d/*/max_freq"
     done
 }
 
@@ -76,6 +73,10 @@ unify_lpm() {
     lock_val "0" /sys/module/lpm_levels/parameters/lpm_ipi_prediction
     lock_val "0" /sys/module/lpm_levels/parameters/lpm_prediction
     lock_val "2" /sys/module/lpm_levels/parameters/bias_hyst
+    for d in kernel walt; do
+        mask_val "255" /proc/sys/$d/sched_busy_hysteresis_enable_cpus
+        mask_val "2000000" /proc/sys/$d/sched_busy_hyst_ns
+    done
 }
 
 disable_hotplug() {
@@ -178,6 +179,7 @@ disable_userspace_boost() {
     # work with uperf/ContextScheduler
     lock_val "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"
     lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
+    lock_val "9999000" "/sys/kernel/fpsgo/fbt/limit_*"
     lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
     lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
     lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable

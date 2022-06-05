@@ -67,7 +67,7 @@ touch --> idle: timeout / not rendering
 | ------- | ----- | -------------------------------------------------- |
 | idle    | float | （单位：秒）默认                                   |
 | touch   | float | （单位：秒）触摸屏幕/按下按键                      |
-| trigger | float | （单位：秒）点击操作离开屏幕/滑动操作起始          |
+| trigger | float | （单位：秒）点击操作离开屏幕/松开按键/滑动操作起始 |
 | gesture | float | （单位：秒）全面屏手势                             |
 | switch  | float | （单位：秒）应用切换动画/点亮屏幕                  |
 | junk    | float | （单位：秒）touch/gesture 中 sfanalysis 检测到掉帧 |
@@ -123,6 +123,8 @@ touch --> idle: timeout / not rendering
 #### powerModel/能耗模型
 
 仅需一组实测数据即可完成标定。经验模型结合实测数据，保持模型精度并显著减少平台适配工作量。类型为对象列表，与 CPU 集群顺序一致。
+
+注：**典型频点并非调频最大值**，大于典型频点的功耗使用模型外插计算。
 
 | 字段         | 类型  | 描述                                          |
 | ------------ | ----- | --------------------------------------------- |
@@ -275,7 +277,7 @@ touch --> idle: timeout / not rendering
 2. 计算每个集群的性能负载和性能需求
    - 如果 CPU 集群最大负载增加量大于`predictThd`，则性能需求计算使用预测的负载值
    - 根据性能负载计算性能需求，`demand = load + (1 - load) * (margin + burst)`
-   - `burst`与`margin`不同，即使当前负载较低也能计算到较大的性能需求
+   - 与`margin`不同，`burst`非零时即使当前负载较低也能计算到较大的性能需求
 3. 计算性能需求对应的工作频点
    - CPU 整体如果存在多个集群，它们共享整个`latencyTime`，表示从性能最低的集群的最低频到性能最高的集群的最高频率的最小延迟
    - 由于离散采样周期的存在，实测 CPU 整体升频最小延迟一般会大于设定的`latencyTime`
@@ -286,6 +288,7 @@ touch --> idle: timeout / not rendering
    - 如果当前能耗大于`slowLimitPower`，能耗缓冲池余量减少
    - 如果当前能耗小于`slowLimitPower`，能耗缓冲池余量增加，并按照`fastLimitRecoverScale`缩放因子恢复，总量不超过`fastLimitCapacity`
    - 限制 CPU 功耗根据能耗模型选择最优频率限制，在限定功耗下提供最佳整体性能
+   - `burst`非零时忽略`fastLimitPower`和`slowLimitPower`限制
 5. 引导任务调度器放置任务
    - 启用`guideCap`后，根据能耗模型调节集群性能容量，引导 EAS 任务调度器把任务放置到能效最佳的集群
    - 启用`limitEfficiency`后，低性能集群最大频点能效值不高于高性能集群当前频点的能效值
@@ -303,7 +306,7 @@ touch --> idle: timeout / not rendering
 | fastLimitRecoverScale | float | （0.1~10.0）CPU 短期功耗限制容量恢复缩放因子                                                 |
 | predictThd            | float | （0.1~1.0）CPU 集群最大负载增加量大于该阈值，则集群调频使用预测的负载值，并忽略`latencyTime` |
 | margin                | float | （0.0~1.0）调频提供的性能余量                                                                |
-| burst                 | float | （0.0~1.0）调频提供的额外性能余量，非零时忽略`latencyTime`                                   |
+| burst                 | float | （0.0~1.0）调频提供的额外性能余量，非零时忽略`latencyTime`和功耗限制                         |
 | guideCap              | bool  | 启用引导 EAS 任务调度负载转移                                                                |
 | limitEfficiency       | bool  | 启用 CPU 整体能效限制                                                                        |
 
