@@ -74,7 +74,7 @@ install_uperf() {
 echo ""
 echo "* Uperf https://github.com/yc9559/uperf/"
 echo "* Author: Matt Yang"
-echo "* Version: v3(22.06.05)"
+echo "* Version: v3(22.06.26)"
 echo ""
 
 echo "- Installing uperf"

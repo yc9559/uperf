@@ -54,9 +54,7 @@ touch --> switch: detected window animation
 touch --> junk: detected junk
 gesture --> switch: detected window animation
 gesture --> junk: detected junk
-switch --> swjunk: detected junk
 junk --> touch: timeout / finished junk
-swjunk --> switch: timeout / finished junk
 trigger --> touch: timeout / not rendering
 gesture --> touch: timeout / not rendering
 switch --> touch: timeout / not rendering
@@ -71,7 +69,6 @@ touch --> idle: timeout / not rendering
 | gesture | float | （单位：秒）全面屏手势                             |
 | switch  | float | （单位：秒）应用切换动画/点亮屏幕                  |
 | junk    | float | （单位：秒）touch/gesture 中 sfanalysis 检测到掉帧 |
-| swjunk  | float | （单位：秒）switch 中 sfanalysis 检测到掉帧        |
 
 ### atrace/数据打点
 
@@ -302,7 +299,7 @@ touch --> idle: timeout / not rendering
 | latencyTime           | float | （单位：秒）（0.0~10.0）CPU 整体升频最小延迟                                                 |
 | slowLimitPower        | float | （单位：瓦）（0.05~999.0）CPU 长期功耗限制                                                   |
 | fastLimitPower        | float | （单位：瓦）（0.05~999.0）CPU 短期功耗限制，能耗缓冲池消耗完毕后进入长期功耗限制             |
-| fastLimitCapacity     | float | （单位：瓦秒）（0.0~999.0）CPU 短期功耗限制容量                                              |
+| fastLimitCapacity     | float | （单位：瓦秒）（0.0~999.0）CPU 短期功耗限制容量，增加时重置余量为限制容量                    |
 | fastLimitRecoverScale | float | （0.1~10.0）CPU 短期功耗限制容量恢复缩放因子                                                 |
 | predictThd            | float | （0.1~1.0）CPU 集群最大负载增加量大于该阈值，则集群调频使用预测的负载值，并忽略`latencyTime` |
 | margin                | float | （0.0~1.0）调频提供的性能余量                                                                |
@@ -333,7 +330,7 @@ touch --> idle: timeout / not rendering
 
 功能模块的参数预设段，在这里定义不同的性能模式，如均衡模式、节能模式。
 
-每组参数预设必须包含`*`, `idle`, `touch`, `trigger`, `gesture`, `junk`, `switch`, `swjunk`，如下样例所示。参数预设中子配置名称定义同[动态配置切换器](#switcher/动态配置切换器)，在状态跳转后应用对应模式的动态参数。其中`*`中的参数为该组参数预设的动态参数默认值。
+每组参数预设必须包含`*`, `idle`, `touch`, `trigger`, `gesture`, `junk`, `switch`，如下样例所示。参数预设中子配置名称定义同[动态配置切换器](#switcher/动态配置切换器)，在状态跳转后应用对应模式的动态参数。其中`*`中的参数为该组参数预设的动态参数默认值。
 
 ```json
 "balance": {
@@ -350,8 +347,6 @@ touch --> idle: timeout / not rendering
   "junk": {
   },
   "switch": {
-  },
-  "swjunk": {
   }
 }
 ```

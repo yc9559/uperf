@@ -10,11 +10,10 @@
       "hintDuration": {
         "idle": 0.0,
         "touch": 4.0,
-        "trigger": 0.02,
+        "trigger": 0.05,
         "gesture": 0.1,
         "switch": 0.4,
-        "junk": 0.02,
-        "swjunk": 0.02
+        "junk": 0.02
       }
     },
     "atrace": {
@@ -63,24 +62,25 @@
       },
       "affinity": {
         "auto": { "bg": "", "fg": "", "idle": "", "touch": "", "boost": "" },
-        "norm": { "bg": "norm", "fg": "eff", "idle": "all", "touch": "norm", "boost": "norm" },
+        "norm": { "bg": "norm", "fg": "norm", "idle": "all", "touch": "norm", "boost": "norm" },
         "bg": { "bg": "norm", "fg": "eff", "idle": "eff", "touch": "eff", "boost": "eff" },
         "coop": { "bg": "norm", "fg": "norm", "idle": "norm", "touch": "norm", "boost": "all" },
         "ui": { "bg": "norm", "fg": "norm", "idle": "norm", "touch": "bal", "boost": "bal" },
         "binder": { "bg": "norm", "fg": "norm", "idle": "norm", "touch": "norm", "boost": "perf" },
         "crit": { "bg": "norm", "fg": "norm", "idle": "bal", "touch": "bal", "boost": "bal" },
+        "gtperf": { "bg": "norm", "fg": "norm", "idle": "all", "touch": "perf", "boost": "all" },
         "gtcoop": { "bg": "norm", "fg": "norm", "idle": "perf", "touch": "gtcoop", "boost": "all" },
         "gtmain": { "bg": "norm", "fg": "norm", "idle": "perf", "touch": "gtmain", "boost": "all" }
       },
       "prio": {
         "auto": { "bg": 0, "fg": 0, "idle": 0, "touch": 0, "boost": 0 },
-        "norm": { "bg": -3, "fg": -1, "idle": -1, "touch": -1, "boost": -1 },
+        "norm": { "bg": -1, "fg": -1, "idle": -1, "touch": -1, "boost": -1 },
         "bg": { "bg": -3, "fg": 139, "idle": 139, "touch": 139, "boost": -3 },
         "coop": { "bg": -3, "fg": 121, "idle": 121, "touch": 121, "boost": -3 },
         "ui": { "bg": -3, "fg": 120, "idle": 110, "touch": 98, "boost": 116 },
-        "main": { "bg": -3, "fg": 120, "idle": 110, "touch": 104, "boost": 98 },
-        "rtusr": { "bg": 98, "fg": 98, "idle": 98, "touch": 98, "boost": 97 },
-        "rtsys": { "bg": 97, "fg": 97, "idle": 97, "touch": 97, "boost": 96 }
+        "main": { "bg": -3, "fg": 120, "idle": 110, "touch": 98, "boost": 100 },
+        "rtusr": { "bg": 98, "fg": 98, "idle": 97, "touch": 97, "boost": 98 },
+        "rtsys": { "bg": 97, "fg": 97, "idle": 96, "touch": 96, "boost": 97 }
       },
       "rules": [
         {
@@ -111,8 +111,8 @@
           "regex": "system_server",
           "pinned": true,
           "rules": [
-            { "k": "^(android.anim|android.display|android.bg)", "ac": "crit", "pc": "rtusr" },
-            { "k": "^Binder:", "ac": "binder", "pc": "auto" },
+            { "k": "^(android.anim|android.display)", "ac": "crit", "pc": "rtusr" },
+            { "k": "^(Binder:|android.bg)", "ac": "binder", "pc": "auto" },
             { "k": "^(TaskSnapshot|Greezer|CachedApp|SystemPressure|SensorService)|[Mm]emory", "ac": "bg", "pc": "auto" },
             { "k": ".", "ac": "auto", "pc": "auto" }
           ]
@@ -173,6 +173,7 @@
             { "k": "/MAIN_THREAD/", "ac": "ui", "pc": "main" },
             { "k": "^(UnityMain|RenderThread |GameThread)", "ac": "gtmain", "pc": "auto" },
             { "k": "^(Unity|Worker Thread|TaskGraph|RHIThread)", "ac": "gtcoop", "pc": "auto" },
+            { "k": "^Thread-", "ac": "gtperf", "pc": "auto" },
             { "k": "^(RenderThread|GLThread|JNISurfaceText|IJK_External_Re)|[Aa]nim|([.]raster|[.]ui)$", "ac": "ui", "pc": "ui" },
             { "k": "^(Chrome_InProc|CrRendererMain|CrGpuMain|CompositorTile)", "ac": "coop", "pc": "coop" },
             { "k": "^(Viz|Chrome_|Compositor)|[Vv]sync|mali-", "ac": "norm", "pc": "ui" },
@@ -195,8 +196,8 @@
       "slowLimitPower": 3.0,
       "fastLimitPower": 6.0,
       "fastLimitCapacity": 10.0,
-      "fastLimitRecoverScale": 0.6,
-      "predictThd": 0.1,
+      "fastLimitRecoverScale": 0.5,
+      "predictThd": 0.3,
       "margin": 0.25,
       "burst": 0.0,
       "guideCap": true,
@@ -218,14 +219,15 @@
       "*": {
         "cpu.latencyTime": 0.2,
         "cpu.slowLimitPower": 2.5,
-        "cpu.fastLimitPower": 5.0,
-        "cpu.fastLimitCapacity": 1.0,
+        "cpu.fastLimitPower": 4.0,
+        "cpu.fastLimitCapacity": 45.0,
         "cpu.margin": 0.2
       },
       "idle": {
         "cpu.baseSampleTime": 0.04,
         "cpu.baseSlackTime": 0.08,
-        "cpu.predictThd": 0.1,
+        "cpu.fastLimitPower": 2.5,
+        "cpu.predictThd": 0.3,
         "cpu.limitEfficiency": true,
         "sched.scene": "idle"
       },
@@ -234,7 +236,7 @@
         "sched.scene": "touch"
       },
       "trigger": {
-        "cpu.margin": 0.6,
+        "cpu.margin": 0.3,
         "sched.scene": "touch"
       },
       "gesture": {
@@ -242,23 +244,13 @@
         "sched.scene": "touch"
       },
       "junk": {
-        "cpu.baseSampleTime": 0.04,
-        "cpu.burst": 0.5,
+        "cpu.burst": 0.6,
         "sched.scene": "touch"
       },
       "switch": {
         "cpu.latencyTime": 0.0,
-        "cpu.slowLimitPower": 5.0,
-        "cpu.fastLimitCapacity": 0.0,
+        "cpu.fastLimitPower": 7.5,
         "cpu.margin": 0.4,
-        "sched.scene": "boost"
-      },
-      "swjunk": {
-        "cpu.latencyTime": 0.0,
-        "cpu.slowLimitPower": 5.0,
-        "cpu.fastLimitCapacity": 0.0,
-        "cpu.margin": 0.4,
-        "cpu.burst": 0.5,
         "sched.scene": "boost"
       }
     },
@@ -266,13 +258,14 @@
       "*": {
         "cpu.latencyTime": 0.4,
         "cpu.slowLimitPower": 1.0,
-        "cpu.fastLimitPower": 2.5,
-        "cpu.fastLimitCapacity": 0.5,
+        "cpu.fastLimitPower": 1.5,
+        "cpu.fastLimitCapacity": 5.0,
         "cpu.margin": 0.1
       },
       "idle": {
         "cpu.baseSampleTime": 0.04,
         "cpu.baseSlackTime": 0.08,
+        "cpu.fastLimitPower": 1.0,
         "cpu.predictThd": 1.0,
         "cpu.limitEfficiency": true,
         "sched.scene": "idle"
@@ -282,7 +275,7 @@
         "sched.scene": "touch"
       },
       "trigger": {
-        "cpu.margin": 0.6,
+        "cpu.margin": 0.3,
         "sched.scene": "touch"
       },
       "gesture": {
@@ -290,23 +283,13 @@
         "sched.scene": "touch"
       },
       "junk": {
-        "cpu.baseSampleTime": 0.04,
         "cpu.burst": 0.3,
         "sched.scene": "touch"
       },
       "switch": {
         "cpu.latencyTime": 0.0,
-        "cpu.slowLimitPower": 2.5,
-        "cpu.fastLimitCapacity": 0.0,
+        "cpu.fastLimitPower": 3.0,
         "cpu.margin": 0.3,
-        "sched.scene": "boost"
-      },
-      "swjunk": {
-        "cpu.latencyTime": 0.0,
-        "cpu.slowLimitPower": 2.5,
-        "cpu.fastLimitCapacity": 0.0,
-        "cpu.margin": 0.3,
-        "cpu.burst": 0.3,
         "sched.scene": "boost"
       }
     },
@@ -335,15 +318,11 @@
         "sched.scene": "touch"
       },
       "junk": {
-        "cpu.burst": 0.5,
+        "cpu.burst": 0.6,
         "sched.scene": "touch"
       },
       "switch": {
         "cpu.burst": 0.2,
-        "sched.scene": "boost"
-      },
-      "swjunk": {
-        "cpu.burst": 0.5,
         "sched.scene": "boost"
       }
     },
@@ -372,15 +351,11 @@
         "sched.scene": "touch"
       },
       "junk": {
-        "cpu.burst": 0.5,
+        "cpu.burst": 0.6,
         "sched.scene": "touch"
       },
       "switch": {
         "cpu.burst": 0.2,
-        "sched.scene": "boost"
-      },
-      "swjunk": {
-        "cpu.burst": 0.5,
         "sched.scene": "boost"
       }
     }
