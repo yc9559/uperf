@@ -18,6 +18,7 @@
 BASEDIR="$(dirname $(readlink -f "$0"))"
 . $BASEDIR/pathinfo.sh
 . $BASEDIR/libcommon.sh
+. $BASEDIR/libuperf.sh
 
 # create busybox symlinks
 $BIN_PATH/busybox/busybox --install -s $BIN_PATH/busybox
@@ -33,15 +34,4 @@ echo "sh $SCRIPT_PATH/powercfg_main.sh \"\$1\"" >>/data/powercfg.sh
 wait_until_login
 
 sh $SCRIPT_PATH/powercfg_once.sh
-
-# raise inotify limit in case file sync existed
-lock_val "1048576" /proc/sys/fs/inotify/max_queued_events
-lock_val "1048576" /proc/sys/fs/inotify/max_user_watches
-lock_val "1024" /proc/sys/fs/inotify/max_user_instances
-
-mv $USER_PATH/uperf_log.txt $USER_PATH/uperf_log.txt.bak
-if [ -f $BIN_PATH/libc++_shared.so ]; then
-    ASAN_LIB="$(ls $BIN_PATH/libclang_rt.asan-*-android.so)"
-    export LD_PRELOAD="$ASAN_LIB $BIN_PATH/libc++_shared.so"
-fi
-$BIN_PATH/uperf $USER_PATH/uperf.json -o $USER_PATH/uperf_log.txt
+uperf_start

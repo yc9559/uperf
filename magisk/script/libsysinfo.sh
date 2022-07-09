@@ -101,10 +101,18 @@ _get_lahaina_type() {
     fi
 }
 
+_get_taro_type() {
+    if [ "$(get_maxfreq 4)" -gt 2700000 ]; then
+        echo "sdm8g1+"
+    else
+        echo "sdm8g1"
+    fi
+}
+
 # $1:board_name
 get_config_name() {
     case "$1" in
-    "taro") echo "sdm8g1" ;;
+    "taro") echo "$(_get_taro_type)" ;;
     "lahaina") echo "$(_get_lahaina_type)" ;;
     "shima") echo "$(_get_lahaina_type)" ;;
     "yupik") echo "$(_get_lahaina_type)" ;;
@@ -121,7 +129,7 @@ get_config_name() {
     "sdm660") echo "sdm660" ;;
     "sdm636") echo "sdm660" ;;
     "trinket") echo "sdm665" ;; # sdm665
-    "bengal") echo "sdm665" ;; # sdm662
+    "bengal") echo "sdm665" ;;  # sdm662
     "msm8976") echo "sdm652" ;;
     "msm8956") echo "sdm650" ;;
     "msm8998") echo "sdm835" ;;
