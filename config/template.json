@@ -24,7 +24,7 @@
     },
     "input": {
       "enable": true,
-      "swipeThd": 0.01,
+      "swipeThd": 0.03,
       "gestureThdX": 0.03,
       "gestureThdY": 0.03,
       "gestureDelayTime": 2.0,
@@ -54,15 +54,15 @@
         "auto": { "bg": "", "fg": "", "idle": "", "touch": "", "boost": "" },
         "norm": { "bg": "", "fg": "all", "idle": "all", "touch": "all", "boost": "all" },
         "bg": { "bg": "", "fg": "c0", "idle": "c0", "touch": "c0", "boost": "c0" },
-        "ui": { "bg": "", "fg": "all", "idle": "c1", "touch": "c1", "boost": "all" },
+        "ui": { "bg": "", "fg": "all", "idle": "all", "touch": "c1", "boost": "all" },
         "crit": { "bg": "", "fg": "all", "idle": "all", "touch": "c1", "boost": "c1" },
         "gtcoop": { "bg": "", "fg": "all", "idle": "all", "touch": "c1", "boost": "all" },
         "gtmain": { "bg": "", "fg": "all", "idle": "all", "touch": "c2", "boost": "all" }
       },
       "prio": {
         "auto": { "bg": 0, "fg": 0, "idle": 0, "touch": 0, "boost": 0 },
-        "norm": { "bg": -1, "fg": -1, "idle": -1, "touch": -1, "boost": -1 },
         "bg": { "bg": -3, "fg": 139, "idle": 139, "touch": 139, "boost": 139 },
+        "norm": { "bg": -1, "fg": -1, "idle": 120, "touch": 120, "boost": 130 },
         "coop": { "bg": -3, "fg": 124, "idle": 122, "touch": 122, "boost": 130 },
         "ui": { "bg": -3, "fg": 120, "idle": 110, "touch": 98, "boost": 116 },
         "rtusr": { "bg": 98, "fg": 98, "idle": 97, "touch": 97, "boost": 98 },
@@ -97,6 +97,7 @@
           "pinned": true,
           "rules": [
             { "k": "^(TaskSnapshot|Greezer|CachedApp|SystemPressure|SensorService)|[Mm]emory", "ac": "bg", "pc": "auto" },
+            { "k": "^Async", "ac": "auto", "pc": "norm" },
             { "k": ".", "ac": "auto", "pc": "auto" }
           ]
         },
@@ -104,7 +105,10 @@
           "name": "SystemUI",
           "regex": "com.android.systemui",
           "pinned": true,
-          "rules": [{ "k": "^(Jit thread pool|HeapTaskDaemon|FinalizerDaemon|ReferenceQueueD)", "ac": "bg", "pc": "auto" }]
+          "rules": [
+            { "k": "^(Jit thread pool|HeapTaskDaemon|FinalizerDaemon|ReferenceQueueD)", "ac": "bg", "pc": "auto" },
+            { "k": ".", "ac": "auto", "pc": "auto" }
+          ]
         },
         {
           "name": "MediaProvider",
@@ -143,16 +147,16 @@
           "rules": [
             { "k": "/MAIN_THREAD/", "ac": "ui", "pc": "ui" },
             { "k": "^(UnityMain|RenderThread |GameThread)", "ac": "gtmain", "pc": "auto" },
-            { "k": "^(Unity|Worker Thread|TaskGraph|RHIThread)", "ac": "gtcoop", "pc": "auto" },
+            { "k": "^(Unity|Worker Thread|TaskGraph|RHIThread|Thread-|Job.Worker)", "ac": "gtcoop", "pc": "auto" },
             { "k": "^(RenderThread|GLThread|JNISurfaceText|IJK_External_Re)|[Aa]nim|([.]raster|[.]ui)$", "ac": "ui", "pc": "ui" },
-            { "k": "^(Chrome_InProc|CrRendererMain|CrGpuMain|CompositorTile)", "ac": "norm", "pc": "norm" },
+            { "k": "^(Chrome_InProc|CrRendererMain|CrGpuMain|CompositorTile)", "ac": "norm", "pc": "auto" },
             { "k": "^(Viz|Chrome_|Compositor)|[Vv]sync|mali-", "ac": "ui", "pc": "ui" },
-            { "k": "^(OkHttp|Ysa|Xqa|Rx|TVKDL|APM|tp-|cgi-|ODCP-|Bugly|xlog_)", "ac": "bg", "pc": "auto" },
+            { "k": "^(OkHttp|Ysa|Xqa|Rx|APM|TVKDL-|tp-|cgi-|ODCP-|Bugly|xlog_)", "ac": "bg", "pc": "auto" },
             { "k": "^(xg_vip_service|Profile|SearchDaemon|default_matrix|FrameDecoder|FrameSeq)", "ac": "bg", "pc": "auto" },
             { "k": "^(GPU completion|HWC release|hwui|FramePolicy|ScrollPolicy|ged-swd)", "ac": "bg", "pc": "rtusr" },
             { "k": "^(JS|libweexjsb|WeexJsBridge|mqt_native|mqt_js|JavaScriptTh)", "ac": "norm", "pc": "coop" },
-            { "k": "^(pool-|glide-|launcher-)|[Dd]ownload|[Ss]chedule|[Ww]ork|[Pp]ool|[Dd]efau|Fresco", "ac": "norm", "pc": "coop" },
-            { "k": ".", "ac": "norm", "pc": "norm" }
+            { "k": "^(pool-|glide-|launcher-|Fresco)|[Dd]ownload|[Ss]chedule|[Ww]ork|[Pp]ool|[Dd]efau", "ac": "norm", "pc": "coop" },
+            { "k": ".", "ac": "norm", "pc": "auto" }
           ]
         }
       ]
@@ -199,6 +203,7 @@
         "sched.scene": "touch"
       },
       "trigger": {
+        "cpu.latencyTime": 0.0,
         "cpu.margin": 0.4,
         "sched.scene": "touch"
       },
@@ -239,7 +244,8 @@
         "sched.scene": "touch"
       },
       "trigger": {
-        "cpu.margin": 0.4,
+        "cpu.latencyTime": 0.0,
+        "cpu.margin": 0.3,
         "sched.scene": "touch"
       },
       "gesture": {

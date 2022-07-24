@@ -33,7 +33,8 @@ unify_cgroup() {
     rmdir /dev/cpuset/foreground/boost
 
     # work with uperf/ContextScheduler
-    change_task_cgroup "surfaceflinger|system_server" "foreground" "cpuset"
+    change_task_cgroup "surfaceflinger" "" "cpuset"
+    change_task_cgroup "system_server" "foreground" "cpuset"
     change_task_cgroup "netd|allocator" "foreground" "cpuset"
     change_task_cgroup "hardware.media.c2|vendor.mediatek.hardware" "background" "cpuset"
     change_task_cgroup "aal_sof|kfps|dsp_send_thread|vdec_ipi_recv|mtk_drm_disp_id|disp_feature|hif_thread|main_thread|rx_thread|ged_" "background" "cpuset"

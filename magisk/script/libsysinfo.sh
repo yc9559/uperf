@@ -149,6 +149,7 @@ get_config_name() {
     "universal8895") echo "e8895" ;;
     "universal8890") echo "e8890" ;;
     "universal7420") echo "e7420" ;;
+    "mt6765") echo "mtp35" ;; # Helio P35(mt6765)/G35(mt6765g)/G37(mt6765h)
     "mt6768") echo "mtg80" ;; # Helio P65(mt6768)/G70(mt6769v)/G80(mt6769t)/G85(mt6769z)
     "mt6785") echo "mtg90t" ;;
     "mt6833") echo "mtd720" ;;
