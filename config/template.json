@@ -40,7 +40,13 @@
     },
     "sysfs": {
       "enable": true,
-      "knob": {}
+      "knob": {
+        "cpusetTa": "/dev/cpuset/top-app/cpus",
+        "cpusetFg": "/dev/cpuset/foreground/cpus",
+        "cpusetBg": "/dev/cpuset/background/cpus",
+        "cpusetSysBg": "/dev/cpuset/system-background/cpus",
+        "cpusetRe": "/dev/cpuset/restricted/cpus"
+      }
     },
     "sched": {
       "enable": true,
@@ -147,8 +153,8 @@
           "rules": [
             { "k": "/MAIN_THREAD/", "ac": "ui", "pc": "ui" },
             { "k": "^(UnityMain|RenderThread |GameThread)", "ac": "gtmain", "pc": "auto" },
-            { "k": "^(Unity|Worker Thread|TaskGraph|RHIThread|Thread-|Job.Worker)", "ac": "gtcoop", "pc": "auto" },
-            { "k": "^(RenderThread|GLThread|JNISurfaceText|IJK_External_Re)|[Aa]nim|([.]raster|[.]ui)$", "ac": "ui", "pc": "ui" },
+            { "k": "^(Unity|Worker Thread|TaskGraph|RHIThread|GLThread|Thread-|Job.Worker)", "ac": "gtcoop", "pc": "auto" },
+            { "k": "^(RenderThread|JNISurfaceText|IJK_External_Re)|[Aa]nim|([.]raster|[.]ui)$", "ac": "ui", "pc": "ui" },
             { "k": "^(Chrome_InProc|CrRendererMain|CrGpuMain|CompositorTile)", "ac": "norm", "pc": "auto" },
             { "k": "^(Viz|Chrome_|Compositor)|[Vv]sync|mali-", "ac": "ui", "pc": "ui" },
             { "k": "^(OkHttp|Ysa|Xqa|Rx|APM|TVKDL-|tp-|cgi-|ODCP-|Bugly|xlog_)", "ac": "bg", "pc": "auto" },
@@ -177,7 +183,13 @@
       "guideCap": true,
       "limitEfficiency": false
     },
-    "sysfs": {},
+    "sysfs": {
+      "cpusetTa": "0-7",
+      "cpusetFg": "0-2,4-7",
+      "cpusetBg": "0-2",
+      "cpusetSysBg": "0-2",
+      "cpusetRe": "0-6"
+    },
     "sched": {
       "scene": "idle"
     }
@@ -188,7 +200,7 @@
         "cpu.latencyTime": 0.2,
         "cpu.slowLimitPower": 2.0,
         "cpu.fastLimitPower": 2.0,
-        "cpu.fastLimitCapacity": 20.0,
+        "cpu.fastLimitCapacity": 16.0,
         "cpu.margin": 0.2
       },
       "idle": {
@@ -218,7 +230,7 @@
       "switch": {
         "cpu.latencyTime": 0.0,
         "cpu.slowLimitPower": 3.0,
-        "cpu.fastLimitPower": 6.0,
+        "cpu.fastLimitPower": 5.0,
         "cpu.fastLimitRecoverScale": 0.1,
         "cpu.margin": 0.4,
         "sched.scene": "boost"
@@ -229,7 +241,7 @@
         "cpu.latencyTime": 0.4,
         "cpu.slowLimitPower": 1.0,
         "cpu.fastLimitPower": 1.0,
-        "cpu.fastLimitCapacity": 5.0,
+        "cpu.fastLimitCapacity": 4.0,
         "cpu.margin": 0.1
       },
       "idle": {
@@ -259,7 +271,7 @@
       "switch": {
         "cpu.latencyTime": 0.0,
         "cpu.slowLimitPower": 1.5,
-        "cpu.fastLimitPower": 3.0,
+        "cpu.fastLimitPower": 2.5,
         "cpu.fastLimitRecoverScale": 0.1,
         "cpu.margin": 0.3,
         "sched.scene": "boost"

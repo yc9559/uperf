@@ -1,7 +1,7 @@
 {
     "name": "Uperf",
     "author": "Matt Yang",
-    "version": "22.07.24",
+    "version": "22.09.04",
     "versionCode": 3,
     "features": {
         "strict": true,

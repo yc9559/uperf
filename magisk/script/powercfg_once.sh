@@ -96,7 +96,7 @@ disable_hotplug() {
     lock_val "0" /sys/kernel/zen_decision/enabled
 
     # stop sched core_ctl
-    set_corectl_param "enable" "0:0 2:0 4:0 6:0 7:0"
+    set_corectl_param "enable" "0:0 6:0 7:0"
 
     # bring all cores online
     for i in 0 1 2 3 4 5 6 7 8 9; do
@@ -140,6 +140,15 @@ disable_kernel_boost() {
     lock_val "enable 0" /proc/perfmgr/tchbst/user/usrtch
     lock "/proc/ppm/policy/*"
     lock "/proc/ppm/*"
+    lock_val "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"
+    lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
+    lock_val "9999000" "/sys/kernel/fpsgo/fbt/limit_*"
+    lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
+    lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
+    lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable
+    lock_val "90" /sys/kernel/fpsgo/fbt/thrm_temp_th
+    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_limit_cpu
+    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_sub_cpu
 
     # Samsung
     mutate "0" "/sys/class/input_booster/*"
@@ -175,17 +184,6 @@ disable_userspace_boost() {
 
     # Qualcomm perfd
     stop perfd 2>/dev/null
-
-    # work with uperf/ContextScheduler
-    lock_val "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"
-    lock_val "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
-    lock_val "9999000" "/sys/kernel/fpsgo/fbt/limit_*"
-    lock_val "0" /sys/kernel/fpsgo/fbt/switch_idleprefer
-    lock_val "1" /proc/perfmgr/syslimiter/syslimiter_force_disable
-    lock_val "1" /sys/module/mtk_core_ctl/parameters/policy_enable
-    lock_val "90" /sys/kernel/fpsgo/fbt/thrm_temp_th
-    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_limit_cpu
-    lock_val "-1" /sys/kernel/fpsgo/fbt/thrm_sub_cpu
 
     # Qualcomm&MTK perfhal
     perfhal_stop
